@@ -27,13 +27,48 @@ const esquemaLocal = Schema([
   Table('colores', [Column.text('codigo'), Column.text('nombre'), Column.text('hex'), Column.integer('activo')]),
   Table('estaciones', [
     Column.text('codigo'), Column.text('nombre'), Column.text('tipo'), Column.text('proceso'),
-    Column.text('celula_id'), Column.text('bodega_id'),
+    Column.text('celula_id'), Column.text('bodega_id'), Column.text('impresora_id'),
   ]),
+  // --- Inventario (Fase 2) ---
+  Table('materiales', [
+    Column.text('codigo'), Column.text('tipo'), Column.text('nombre'), Column.text('unidad'),
+    Column.integer('maneja_color'), Column.integer('activo'),
+  ]),
+  Table('proveedores', [Column.text('nombre')]),
+  Table('bodegas', [Column.text('codigo'), Column.text('nombre'), Column.text('tipo')]),
+  Table('ubicaciones', [Column.text('bodega_id'), Column.text('codigo'), Column.text('descripcion'), Column.integer('activo')],
+      indexes: [Index('ubic_codigo', [IndexedColumn('codigo')])]),
+  Table('rollos', [
+    Column.text('codigo'), Column.text('material_id'), Column.text('color_id'), Column.text('proveedor_id'),
+    Column.text('lote_tintura'), Column.text('tono'), Column.real('ancho_real_cm'),
+    Column.real('metros_saldo'), Column.real('kilos_saldo'), Column.text('bodega_id'), Column.text('ubicacion_id'),
+    Column.text('estado'), Column.integer('es_retazo'), Column.text('fecha_ingreso'),
+  ], indexes: [Index('rollo_codigo', [IndexedColumn('codigo')])]),
+  Table('conteos_fisicos', [
+    Column.text('consecutivo'), Column.text('bodega_id'), Column.text('ubicacion_id'), Column.text('alcance'), Column.text('estado'),
+  ]),
+  Table('impresoras', [
+    Column.text('nombre'), Column.text('modelo'), Column.text('conexion'), Column.text('ip'), Column.integer('puerto'),
+  ]),
+  Table('plantillas_etiqueta', [Column.text('tipo'), Column.text('tamano'), Column.text('zpl'), Column.integer('version')]),
   Table('dispositivos', [Column.text('estacion_id'), Column.text('nombre'), Column.text('tipo')]),
 
   // --- Eventos que suben (solo se agregan) ---
   Table.insertOnly('asistencia_marcas', [
     Column.text('empleado_id'), Column.text('tipo'), Column.text('anula_id'), Column.text('motivo'), Column.text('ocurrido_en'),
+  ]),
+
+  Table.insertOnly('conteo_registros', [
+    Column.text('conteo_id'), Column.text('rollo_id'), Column.text('material_id'), Column.text('color_id'),
+    Column.text('ubicacion_id'), Column.real('cantidad'), Column.text('anula_id'), Column.text('ocurrido_en'),
+  ]),
+  Table.insertOnly('traslados_rollo', [
+    Column.text('rollo_id'), Column.text('ubicacion_destino_id'), Column.text('ocurrido_en'),
+  ]),
+  Table.insertOnly('trabajos_impresion', [
+    Column.text('impresora_id'), Column.text('plantilla_id'), Column.integer('plantilla_version'), Column.text('entidad'),
+    Column.text('entidad_id'), Column.text('codigo'), Column.text('medio'), Column.integer('es_reimpresion'),
+    Column.text('motivo'), Column.text('estado_final'), Column.integer('intentos'), Column.text('ocurrido_en'),
   ]),
 
   // --- Solo locales ---
@@ -51,4 +86,12 @@ const esquemaLocal = Schema([
     Index('por_empleado', [IndexedColumn('empleado_id'), IndexedColumn('ocurrido_en')]),
   ]),
   Table.localOnly('ajustes_locales', [Column.text('valor')]), // id = clave
+  Table.localOnly('cola_impresion', [
+    Column.text('impresora_id'), Column.text('impresora_nombre'), Column.text('ip'), Column.integer('puerto'),
+    Column.text('zpl'), Column.text('entidad'), Column.text('entidad_id'), Column.text('codigo'),
+    Column.text('plantilla_id'), Column.integer('plantilla_version'), Column.integer('es_reimpresion'), Column.text('motivo'),
+    Column.text('estado'), // pendiente | enviado
+    Column.integer('intentos'), Column.text('error'), Column.text('creado_en'), Column.text('proximo_intento'),
+    Column.text('enviado_en'),
+  ], indexes: [Index('cola_estado', [IndexedColumn('estado'), IndexedColumn('creado_en')])]),
 ]);

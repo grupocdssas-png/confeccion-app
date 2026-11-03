@@ -30,7 +30,9 @@ class PantallaInicioPlanta extends ConsumerWidget {
           if (e.tipo == 'modulo') ('Marcar operaciones', Icons.touch_app_outlined, null, 6),
           ('Escanear paquetes', Icons.qr_code_scanner, null, 6),
           if (e.tipo == 'mesa_corte') ('Corte en mesa', Icons.content_cut, null, 5),
-          if (e.tipo == 'bodega') ('Bodega: recibir, despachar, contar', Icons.inventory_2_outlined, null, 2),
+          if (e.tipo == 'bodega') ('Bodega: rollos, conteos, etiquetas', Icons.inventory_2_outlined, '/bodega', 2),
+          if (e.tipo == 'mesa_corte') ('Consultar rollo', Icons.search, '/bodega/rollo', 2),
+          if (e.tipo == 'bodega' || e.tipo == 'mesa_corte') ('Impresora', Icons.print_outlined, '/bodega/impresion', 2),
           if (e.tipo == 'calidad') ('Calidad en proceso', Icons.verified_outlined, null, 9),
         ];
         return Scaffold(

@@ -24,5 +24,21 @@ streams:
     auto_subscribe: true
     queries:
       - SELECT id, estacion_id, nombre, tipo FROM dispositivos WHERE usuario_id = auth.user_id() AND activo = true
-      - SELECT id, codigo, nombre, tipo, proceso, celula_id, bodega_id FROM estaciones
+      - SELECT id, codigo, nombre, tipo, proceso, celula_id, bodega_id, impresora_id FROM estaciones
         WHERE id IN (SELECT estacion_id FROM dispositivos WHERE usuario_id = auth.user_id() AND activo = true)
+
+  # Inventario para bodega, mesas de corte y conteos con el celular (Fase 2).
+  # Los rollos agotados dejan de bajar solos.
+  inventario:
+    auto_subscribe: true
+    queries:
+      - SELECT id, codigo, tipo, nombre, unidad, maneja_color, activo FROM materiales
+      - SELECT id, codigo, nombre, tipo FROM bodegas
+      - SELECT id, nombre FROM proveedores
+      - SELECT id, bodega_id, codigo, descripcion, activo FROM ubicaciones
+      - SELECT id, codigo, material_id, color_id, proveedor_id, lote_tintura, tono, ancho_real_cm, metros_saldo, kilos_saldo,
+          bodega_id, ubicacion_id, estado, es_retazo, CAST(fecha_ingreso AS TEXT) AS fecha_ingreso
+        FROM rollos WHERE estado != 'agotado'
+      - SELECT id, consecutivo, bodega_id, ubicacion_id, alcance, estado FROM conteos_fisicos WHERE estado = 'abierto'
+      - SELECT id, nombre, modelo, conexion, CAST(ip AS TEXT) AS ip, puerto FROM impresoras WHERE activo = true
+      - SELECT id, tipo, tamano, zpl, version FROM plantillas_etiqueta WHERE activa = true

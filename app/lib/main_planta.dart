@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -7,6 +9,7 @@ import 'core/auth/sesion.dart';
 import 'core/router/router_planta.dart';
 import 'core/sync/proveedores_sync.dart';
 import 'core/tema/tema.dart';
+import 'features/bodega/repositorio_bodega.dart';
 
 /// App Android de planta (tablets y celulares): trabaja siempre contra la base
 /// local y sincroniza con el servidor cuando hay señal.
@@ -40,6 +43,16 @@ class _AppPlantaState extends ConsumerState<AppPlanta> {
         db.disconnect();
       }
     }, fireImmediately: true);
+    // La cola de impresión revisa pendientes cada 15 s (reintentos con espera creciente).
+    _cola = Timer.periodic(const Duration(seconds: 15), (_) => ref.read(colaImpresionProvider).procesar());
+  }
+
+  Timer? _cola;
+
+  @override
+  void dispose() {
+    _cola?.cancel();
+    super.dispose();
   }
 
   @override

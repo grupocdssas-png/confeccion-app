@@ -213,7 +213,7 @@ create policy impresion_registrar on public.trabajos_impresion for insert to aut
 -- ---------------------------------------------------------------------
 alter publication powersync add table
   public.materiales, public.bodegas, public.ubicaciones, public.rollos, public.conteos_fisicos,
-  public.impresoras, public.plantillas_etiqueta;
+  public.impresoras, public.plantillas_etiqueta, public.proveedores;
 
 do $$
 begin

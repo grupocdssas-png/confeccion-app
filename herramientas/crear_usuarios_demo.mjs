@@ -18,8 +18,10 @@ const usuarios = [
   { correo: 'gerencia@ejemplo.co', nombre: 'Gerencia (EJEMPLO)', roles: ['gerencia'] },
   { correo: 'jefe.produccion@ejemplo.co', nombre: 'Jefe de producción (EJEMPLO)', roles: ['jefe_produccion'] },
   { correo: 'bodega@ejemplo.co', nombre: 'Bodega (EJEMPLO)', roles: ['bodega'] },
+  { correo: 'costos@ejemplo.co', nombre: 'Costos (EJEMPLO)', roles: ['costos'] },
   { correo: 'tablet-ent@planta.local', nombre: 'Tablet entrada', roles: ['dispositivo'], estacion: 'ENT', tipo: 'tablet' },
   { correo: 'tablet-mod1@planta.local', nombre: 'Tablet Módulo 1', roles: ['dispositivo'], estacion: 'MOD1', tipo: 'tablet' },
+  { correo: 'celular-bodega@planta.local', nombre: 'Celular bodega', roles: ['dispositivo'], estacion: 'BOD', tipo: 'celular' },
 ];
 
 async function api(ruta, opciones = {}) {
