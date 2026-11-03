@@ -90,6 +90,8 @@ class _PantallaOperacionesState extends ConsumerState<PantallaOperaciones> {
                       Text('${o['nombre']}', style: TextStyle(color: o['activo'] == true ? null : Colores.textoSuave)),
                       if (o['restrictiva'] == true) const Padding(padding: EdgeInsets.only(left: 6), child: Pastilla('Restrictiva', color: Colores.ambar)),
                       if (o['agrega_minutos_sam'] == false) const Padding(padding: EdgeInsets.only(left: 6), child: Pastilla('No suma SAM', color: Colores.textoSuave)),
+                      if (o['tipo'] == 'inspeccion') const Padding(padding: EdgeInsets.only(left: 6), child: Pastilla('Revisión', color: Colores.verde)),
+                      if (o['unidades_marcacion'] != null) Padding(padding: const EdgeInsets.only(left: 6), child: Pastilla('×${o['unidades_marcacion']} al marcar', color: Colores.ambar)),
                     ])),
                     DataCell(Text([o['familias_producto']?['nombre'], o['tipos_producto']?['nombre']].whereType<String>().join(' · '), style: estilo(12.5))),
                     DataCell(Pastilla(Colores.nombreProceso(o['proceso']), color: Colores.deProceso(o['proceso']))),
@@ -155,12 +157,13 @@ class DialogoOperacion extends ConsumerStatefulWidget {
 class _DialogoOperacionState extends ConsumerState<DialogoOperacion> {
   late final o = widget.operacion;
   late final _c = {
-    for (final k in ['codigo', 'nombre', 'sam', 'valor_destajo', 'parte', 'repeticiones'])
+    for (final k in ['codigo', 'nombre', 'sam', 'valor_destajo', 'parte', 'repeticiones', 'sam_reproceso', 'unidades_marcacion'])
       k: TextEditingController(text: o?[k] == null ? (k == 'repeticiones' ? '1' : '') : '${o![k]}'.replaceAll('.', ',')),
   };
   late String? _familia = o?['familia_id'], _tipo = o?['tipo_producto_id'], _maquina = o?['tipo_maquina_id'];
   late String _proceso = o?['proceso'] ?? 'confeccion', _tipoOp = o?['tipo'] ?? 'normal';
   late bool _restrictiva = o?['restrictiva'] ?? false, _suma = o?['agrega_minutos_sam'] ?? true, _activo = o?['activo'] ?? true;
+  late bool _cambiarUnidades = o?['permite_cambiar_unidades'] ?? false, _sinTallaColor = o?['sin_talla_color'] ?? false;
   String? _error;
 
   @override
@@ -197,7 +200,11 @@ class _DialogoOperacionState extends ConsumerState<DialogoOperacion> {
                 items: const [DropdownMenuItem(value: 'normal', child: Text('Normal')), DropdownMenuItem(value: 'reproceso', child: Text('Reproceso')),
                   DropdownMenuItem(value: 'manual', child: Text('Manual')), DropdownMenuItem(value: 'inspeccion', child: Text('Inspección')),
                   DropdownMenuItem(value: 'empaque', child: Text('Empaque'))], onChanged: (x) => _tipoOp = x!)),
+            t('sam_reproceso', 'SAM de reproceso', 150),
+            t('unidades_marcacion', 'Unidades al marcar (vacío = general)', 240),
             _check('Operación restrictiva', _restrictiva, (v) => _restrictiva = v),
+            _check('Permite cambiar unidades en la tablet', _cambiarUnidades, (v) => _cambiarUnidades = v),
+            _check('Sin talla y color', _sinTallaColor, (v) => _sinTallaColor = v),
             _check('Agrega minutos al SAM', _suma, (v) => _suma = v),
             _check('Activa', _activo, (v) => _activo = v),
             if (_error != null) Text(_error!, style: estilo(13, color: Colores.rojo)),
@@ -224,6 +231,9 @@ class _DialogoOperacionState extends ConsumerState<DialogoOperacion> {
       'parte': _c['parte']!.text.trim().isEmpty ? null : _c['parte']!.text.trim(),
       'repeticiones': numeroCo(_c['repeticiones']!.text) ?? 1, 'tipo': _tipoOp,
       'restrictiva': _restrictiva, 'agrega_minutos_sam': _suma, 'activo': _activo,
+      'sam_reproceso': numeroCo(_c['sam_reproceso']!.text),
+      'unidades_marcacion': numeroCo(_c['unidades_marcacion']!.text)?.round(),
+      'permite_cambiar_unidades': _cambiarUnidades, 'sin_talla_color': _sinTallaColor,
     };
     if (d['sam'] == null || (d['sam'] as double) <= 0) return setState(() => _error = 'El SAM debe ser mayor que cero');
     try {

@@ -57,10 +57,31 @@ crear una nueva versión desde una ficha aprobada y subir un boceto a Storage.
 ![Costo estándar y aprobación](capturas/costo_aprobacion.png)
 ![Importador SAMMU](capturas/importador.png)
 
+## Ajustes con el archivo real de SAMMU (POLO_ECONOMICA001.csv)
+
+El archivo real es la **secuencia de una referencia** (no la lista maestra), separado por `;` pero con **punto decimal**,
+en Windows-1252, sin código de operación y con la máquina como "Sitio de trabajo". Cambios:
+
+- **Error grave corregido:** el importador asumía coma decimal en los CSV con `;` y habría leído "0.33" como 33 minutos.
+  Ahora el separador decimal se detecta por los datos.
+- Nuevo tipo **"Secuencia de una referencia"**: crea la referencia desde el nombre del archivo (o usa una ficha en borrador),
+  crea en la lista maestra las operaciones que falten (código automático `OP-0001…`), arma la secuencia y la ruta de la ficha.
+  Las operaciones se reconocen por nombre dentro del mismo tipo de producto; si el SAM cambió se actualiza y se informa.
+- Opción **"Crear tipos de máquina que no existan"** (PL1, FLTPS, FLT, RCB, OJ, BT, PLC, TERMOFIJADORA).
+- Campos nuevos de SAMMU guardados por operación: **unidades al marcar**, SAM de reproceso, operación de revisión
+  (queda como "inspección"), permitir cambiar unidades y sin talla/color. Se usan en la tablet (Fase 6).
+
+Resultado con el archivo completo, en el navegador contra Supabase: **34 filas correctas, 34 operaciones nuevas, 8 tipos de
+máquina nuevos, SAM total 14,0596 min** (igual al cálculo independiente sobre el archivo). Queda como prueba automática.
+
+![Importación del archivo real](capturas/importador_sammu_real.png)
+
 ## Pendientes y decisiones
 
-- **Necesito un archivo real exportado de SAMMU** (aunque sea con pocas filas) para confirmar nombres de columnas y formatos.
-  El importador ya deja elegir columnas a mano, así que no debería bloquear.
+- El archivo trae la columna **Precio vacía**: el valor a destajo de esas operaciones quedó en $ 0. Si SAMMU tiene los
+  precios en otro reporte, lo importamos también; si no, se llenan en la lista maestra.
+- **SAM por tipo de producto:** si dos referencias del mismo tipo traen la misma operación con SAM distinto, la última
+  importación manda (y queda en el historial). Ver la pregunta en el resumen de la fase.
 - **OP activas desde SAMMU** se importan en la Fase 4, cuando existan las órdenes de producción.
 - La **gerencia** puede aprobar por cualquiera de las tres áreas (útil si falta alguien). Si prefiere que sean siempre tres personas distintas, lo restrinjo.
 - El **costo de materiales** usa el costo estándar de cada material. Si un material no tiene costo, aparece en rojo en el detalle

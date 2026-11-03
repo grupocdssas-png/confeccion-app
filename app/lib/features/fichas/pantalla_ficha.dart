@@ -40,8 +40,10 @@ class _PantallaFichaState extends ConsumerState<PantallaFicha> {
         final puedeEditar = ref.watch(sesionProvider).value?.puedeEditar('ficha_tecnica') ?? false;
         return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
           EncabezadoPagina('${r['codigo']} · ${r['nombre']}',
-              subtitulo: 'Versión ${f['version']}${f['basada_en_id'] != null ? ' (basada en una versión anterior)' : ''} · '
-                  '${[r['familias_producto']?['nombre'], r['tipos_producto']?['nombre']].whereType<String>().join(' · ')}',
+              subtitulo: [
+                'Versión ${f['version']}${f['basada_en_id'] != null ? ' (basada en una versión anterior)' : ''}',
+                r['familias_producto']?['nombre'], r['tipos_producto']?['nombre'],
+              ].whereType<String>().join(' · '),
               acciones: [
                 pastillaEstadoFicha('${f['estado']}'),
                 OutlinedButton(onPressed: () => context.go('/fichas'), child: const Text('Volver')),

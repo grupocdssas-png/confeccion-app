@@ -160,3 +160,62 @@ create temp table imp2 as select importar('empleados', '[{"codigo":"E101","nombr
 reset role;
 select pg_temp.ok((select (r->>'ok')::int = 1 from imp2) and (select qr from empleados where codigo = 'E102') = 'OPR-0102',
                   'Empleados: célula inexistente rechazada; el carnet se genera (OPR-0102)');
+
+-- ---------- Importar la secuencia de una referencia (formato real de SAMMU) ----------
+set role authenticated;
+set request.jwt.claim.sub = 'aaaaaaaa-0000-0000-0000-000000000009';  -- diseño
+create temp table polo as select nueva_referencia('POLO-ECO-001', 'Polo económica (EJEMPLO)',
+  (select id from familias_producto where nombre = 'Camisetas'), (select id from tipos_producto where nombre = 'Camiseta polo')) as id;
+create temp table filas_polo as select '[
+  {"secuencia":"1","nombre":"MARCAR PERILLA","maquina":"MAN","sam":"0.33","proceso":"TERMINACION","repeticiones":"1","revision":"FALSE"},
+  {"secuencia":"2","nombre":"DOBLAR BORDE PERILLA","maquina":"PL1","sam":"0.1","proceso":"CONFECCION","repeticiones":"2","revision":"FALSE"},
+  {"secuencia":"5","nombre":"UNIR HOMBROS","maquina":"FLTPS","sam":"0.41","proceso":"CONFECCION","repeticiones":"1","revision":"FALSE"},
+  {"secuencia":"16","nombre":"MONTAR PUÑO","maquina":"FLT","sam":"0.3","proceso":"CONFECCION","repeticiones":"2","revision":"FALSE"},
+  {"secuencia":"24","nombre":"PULIR Y REVISAR","maquina":"MAN","sam":"1","proceso":"TERMINACION","repeticiones":"1","revision":"TRUE"},
+  {"secuencia":"33","nombre":"TERMOFIJADA","maquina":"TERMOFIJADORA","sam":"0.0208","proceso":"TERMINACION","repeticiones":"2","revision":"FALSE","unidades_marcacion":"12"}
+]'::jsonb as f;
+grant select on polo, filas_polo to authenticated;
+
+create temp table vsin as select validar_importacion('secuencia', (select f from filas_polo), jsonb_build_object('ficha_id', (select id from polo))) as r;
+select pg_temp.ok((select (r->>'ok')::int = 2 and jsonb_array_length(r->'errores') = 4 from vsin), 'Sin crear máquinas: 4 filas fallan (PL1, FLTPS, FLT y TERMOFIJADORA no existen)');
+create temp table vcon as select validar_importacion('secuencia', (select f from filas_polo),
+  jsonb_build_object('ficha_id', (select id from polo), 'crear_maquinas', true)) as r;
+select pg_temp.ok((select (r->>'ok')::int = 6 and (r->'resumen'->>'maquinas_creadas')::int = 4 and (r->'resumen'->>'operaciones_nuevas')::int = 6 from vcon),
+                  'Creando máquinas: las 6 filas pasan y se informan las máquinas y operaciones nuevas');
+select pg_temp.ok(not exists (select 1 from tipos_maquina where codigo = 'TERMOFIJADORA') and not exists (select 1 from ficha_operaciones where ficha_id = (select id from polo)),
+                  'Validar no deja nada creado');
+create temp table imp_polo as select importar('secuencia', (select f from filas_polo), 'POLO_ECONOMICA001.csv',
+  jsonb_build_object('ficha_id', (select id from polo), 'crear_maquinas', true)) as r;
+reset role;
+select pg_temp.ok((select count(*) from ficha_operaciones where ficha_id = (select id from polo)) = 6, 'La secuencia queda en la ficha (6 operaciones)');
+select pg_temp.ok((select sam_total_ficha((select id from polo))) = 0.33 + 0.1 * 2 + 0.41 + 0.3 * 2 + 1 + 0.0208 * 2, 'SAM total de la ficha = Σ SAM × repeticiones');
+select pg_temp.ok((select nombre from operaciones o join ficha_operaciones fo on fo.operacion_id = o.id
+                   where fo.ficha_id = (select id from polo) and fo.secuencia = 16) = 'MONTAR PUÑO', 'La Ñ se conserva');
+select pg_temp.ok((select o.tipo from operaciones o where nombre = 'PULIR Y REVISAR' and tipo_producto_id = (select id from tipos_producto where nombre = 'Camiseta polo')) = 'inspeccion',
+                  '"Es operación de revisión" = TRUE queda como inspección');
+select pg_temp.ok((select fo.unidades_marcacion from ficha_operaciones fo join operaciones o on o.id = fo.operacion_id
+                   where fo.ficha_id = (select id from polo) and o.nombre = 'TERMOFIJADA') = 12, 'Unidades al marcar = 12');
+select pg_temp.ok((select codigo like 'OP-%' from operaciones where nombre = 'UNIR HOMBROS' and tipo_producto_id = (select id from tipos_producto where nombre = 'Camiseta polo')),
+                  'Las operaciones sin código reciben uno (OP-0001…)');
+select pg_temp.ok((select count(*) from ficha_ruta where ficha_id = (select id from polo)) = 2, 'La ruta incluye los procesos de la secuencia');
+
+-- Reimportar con un SAM distinto: la operación (mismo nombre y tipo de producto) se actualiza y se informa
+set role authenticated;
+set request.jwt.claim.sub = 'aaaaaaaa-0000-0000-0000-000000000009';
+create temp table imp_polo2 as select importar('secuencia',
+  jsonb_set((select f from filas_polo), '{2,sam}', '"0.45"'), 'POLO_ECONOMICA001.csv', jsonb_build_object('ficha_id', (select id from polo))) as r;
+reset role;
+select pg_temp.ok((select (r->'resumen'->>'operaciones_nuevas')::int = 0 and (r->'resumen'->>'operaciones_existentes')::int = 6
+                          and r->'resumen'->'sam_cambiados'->0->>'nombre' = 'UNIR HOMBROS' from imp_polo2),
+                  'Reimportar: no duplica operaciones e informa el SAM que cambió');
+select pg_temp.ok((select count(*) from ficha_operaciones where ficha_id = (select id from polo)) = 6, 'Reimportar reemplaza la secuencia (no la duplica)');
+select pg_temp.ok((select sam from operaciones where codigo = 'CAM-010') = 0.36, 'Operación de otro tipo de producto con el mismo nombre no se toca');
+select pg_temp.falla($$select importar('secuencia', '[]'::jsonb, null, jsonb_build_object('ficha_id', (select v1 from f)))$$, 'Importar secuencia sobre una ficha aprobada');
+
+set role authenticated;
+set request.jwt.claim.sub = 'aaaaaaaa-0000-0000-0000-000000000009';
+create temp table nueva as select validar_importacion('secuencia', (select f from filas_polo),
+  jsonb_build_object('crear_maquinas', true, 'nueva_referencia', jsonb_build_object('codigo', 'POLO-ECO-002', 'nombre', 'Polo nueva'))) as r;
+reset role;
+select pg_temp.ok((select (r->>'ok')::int = 6 from nueva) and not exists (select 1 from referencias where codigo = 'POLO-ECO-002'),
+                  'Validar con referencia nueva no la deja creada');

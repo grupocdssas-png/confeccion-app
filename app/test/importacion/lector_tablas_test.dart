@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:archive/archive.dart';
@@ -66,5 +67,41 @@ void main() {
 
   test('formato no soportado', () {
     expect(() => leerTabla(Uint8List(0), 'datos.xls'), throwsFormatException);
+  });
+
+  group('Archivo real de SAMMU (POLO_ECONOMICA001.csv: ";" con punto decimal, Windows-1252)', () {
+    final bytes = File('test/importacion/archivos/POLO_ECONOMICA001.csv').readAsBytesSync();
+    final t = leerTablaArchivo(bytes, 'POLO_ECONOMICA001.csv');
+
+    test('lee las 34 operaciones y detecta el punto decimal', () {
+      expect(t.filas.length, 35);
+      expect(t.decimalComa, isFalse, reason: 'aunque separa con ";", los SAM vienen como 0.33');
+      expect(t.filas[0][6], 'Operación contadora');
+      expect(t.filas[16][1], 'MONTAR PUÑO');
+    });
+
+    test('reconoce todas sus columnas para importar la secuencia', () {
+      final m = autoMapear('secuencia', t.filas.first);
+      for (final c in ['secuencia', 'nombre', 'maquina', 'sam', 'proceso', 'repeticiones', 'contadora', 'revision', 'sam_reproceso',
+                       'sin_talla_color', 'cambiar_unidades', 'unidades_marcacion', 'valor_destajo']) {
+        expect(m[c], isNotNull, reason: c);
+      }
+      expect(m['maquina'], 2, reason: '"Sitio de trabajo" es la máquina');
+    });
+
+    test('los SAM quedan en minutos (0.33, no 33) y el SAM total es 14,0596', () {
+      final filas = construirFilas('secuencia', t.filas.sublist(1), autoMapear('secuencia', t.filas.first), decimalComa: t.decimalComa);
+      expect(filas.first['sam'], '0.33');
+      expect(filas[32]['sam'], '0.0208');
+      expect(filas[31]['unidades_marcacion'], '12');
+      final total = filas.fold<double>(0, (a, f) => a + double.parse(f['sam']!) * double.parse(f['repeticiones']!));
+      expect(total, closeTo(14.0596, 1e-9));
+    });
+
+    test('detección de decimales', () {
+      expect(detectarDecimalComa([['x'], ['0,35'], ['1,5']]), isTrue);
+      expect(detectarDecimalComa([['x'], ['0.085'], ['0.33']]), isFalse);
+      expect(detectarDecimalComa([['x'], ['1.250']]), isNull, reason: 'ambiguo');
+    });
   });
 }

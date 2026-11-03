@@ -21,7 +21,8 @@ TablaLeida leerTablaArchivo(Uint8List bytes, String nombreArchivo) {
   if (n.endsWith('.xlsx')) return TablaLeida(_leerXlsx(bytes));
   if (n.endsWith('.csv') || n.endsWith('.txt')) {
     final (filas, sep) = _leerCsv(bytes);
-    return TablaLeida(filas, decimalComa: sep == ';');
+    // El separador decimal se decide por los datos: SAMMU exporta con ";" pero con punto decimal (0.33).
+    return TablaLeida(filas, decimalComa: detectarDecimalComa(filas) ?? sep == ';');
   }
   throw FormatException('Formato no soportado: use .xlsx o .csv (en Excel: Guardar como → CSV UTF-8). Archivo: $nombreArchivo');
 }
@@ -96,6 +97,25 @@ List<List<String>> _leerXlsx(Uint8List bytes) {
   return [for (final f in filas) [...f, ...List.filled(ancho - f.length, '')]];
 }
 
+/// Mira los números del archivo: "0,35" indica coma decimal; "0.35", "0.085" o "1.5" punto
+/// decimal. "1.250" es ambiguo (puede ser mil doscientos cincuenta) y no cuenta. null = no se sabe.
+bool? detectarDecimalComa(List<List<String>> filas) {
+  var coma = 0, punto = 0;
+  final reComa = RegExp(r'^-?\d+,\d+$'), rePunto = RegExp(r'^-?(\d+)\.(\d+)$');
+  for (final f in filas.skip(1)) {
+    for (final c in f) {
+      if (reComa.hasMatch(c)) {
+        coma++;
+      } else {
+        final m = rePunto.firstMatch(c);
+        if (m != null && (m.group(1) == '0' || m.group(2)!.length != 3)) punto++;
+      }
+    }
+  }
+  if (coma == 0 && punto == 0) return null;
+  return coma > punto;
+}
+
 /// "B12" → 1 (columna base 0)
 int _columna(String ref) {
   var n = 0;
@@ -124,18 +144,35 @@ class CampoImportacion {
   final bool obligatorio, numero;
 }
 
+const _camposSammu = [
+  CampoImportacion('maquina', 'Máquina / sitio de trabajo', ['sitio de trabajo', 'maquina', 'tipo maquina', 'equipo', 'cod maquina', 'sitio']),
+  CampoImportacion('proceso', 'Proceso', ['proceso', 'area', 'seccion']),
+  CampoImportacion('repeticiones', 'Repeticiones', ['repeticiones', 'rep', 'veces', 'frecuencia'], numero: true),
+  CampoImportacion('valor_destajo', 'Valor a destajo', ['precio', 'valor', 'valor destajo', 'tarifa', 'valor unidad', 'destajo'], numero: true),
+  CampoImportacion('revision', 'Es operación de revisión', ['es operacion de revision', 'revision', 'es revision']),
+  CampoImportacion('sam_reproceso', 'SAM de reproceso', ['sam de reproceso', 'sam reproceso'], numero: true),
+  CampoImportacion('unidades_marcacion', 'Unidades al marcar', ['unidades al marcar', 'unidades por marcacion', 'unidades marcar'], numero: true),
+  CampoImportacion('cambiar_unidades', 'Permite cambiar unidades', ['habilitar cambiar unidades', 'cambiar unidades']),
+  CampoImportacion('sin_talla_color', 'Sin talla y color', ['deshabilitar talla y color', 'sin talla y color']),
+];
+
 const camposImportacion = <String, List<CampoImportacion>>{
+  'secuencia': [
+    CampoImportacion('secuencia', 'Secuencia', ['secuencia', 'sec', 'orden', 'consecutivo'], obligatorio: true, numero: true),
+    CampoImportacion('nombre', 'Operación', ['nombre', 'operacion', 'descripcion', 'nombre operacion'], obligatorio: true),
+    CampoImportacion('sam', 'SAM (minutos)', ['sam', 'tiempo estandar', 'minutos', 'tiempo', 'samm'], obligatorio: true, numero: true),
+    CampoImportacion('codigo', 'Código de operación', ['codigo', 'cod', 'cod operacion', 'codigo operacion']),
+    CampoImportacion('contadora', 'Operación contadora', ['operacion contadora', 'contadora']),
+    ..._camposSammu,
+  ],
   'operaciones': [
-    CampoImportacion('codigo', 'Código', ['codigo', 'cod', 'cod operacion', 'codigo operacion', 'id operacion'], obligatorio: true),
+    CampoImportacion('codigo', 'Código', ['codigo', 'cod', 'cod operacion', 'codigo operacion', 'id operacion']),
     CampoImportacion('nombre', 'Nombre', ['nombre', 'operacion', 'descripcion', 'nombre operacion', 'desc'], obligatorio: true),
     CampoImportacion('sam', 'SAM (minutos)', ['sam', 'tiempo estandar', 'minutos', 'tiempo', 'min estandar', 'samm', 'tiempo std'], obligatorio: true, numero: true),
-    CampoImportacion('valor_destajo', 'Valor a destajo', ['valor', 'valor destajo', 'tarifa', 'precio', 'valor unidad', 'destajo'], numero: true),
-    CampoImportacion('maquina', 'Máquina', ['maquina', 'tipo maquina', 'equipo', 'cod maquina']),
     CampoImportacion('familia', 'Familia', ['familia', 'familia producto', 'linea']),
     CampoImportacion('tipo_producto', 'Tipo de producto', ['tipo producto', 'tipo', 'producto']),
     CampoImportacion('parte', 'Parte', ['parte', 'pieza', 'zona']),
-    CampoImportacion('proceso', 'Proceso', ['proceso', 'area', 'seccion']),
-    CampoImportacion('repeticiones', 'Repeticiones', ['repeticiones', 'rep', 'veces', 'frecuencia'], numero: true),
+    ..._camposSammu,
   ],
   'celulas': [
     CampoImportacion('codigo', 'Código', ['codigo', 'cod', 'modulo', 'celula', 'cod modulo'], obligatorio: true),
