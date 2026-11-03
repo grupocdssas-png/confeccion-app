@@ -205,3 +205,99 @@ values
   ('1e000000-0000-0000-0000-000000000002', 3, '1c000000-0000-0000-0000-000000000012', null, 5000, 180, (select id from public.ubicaciones where codigo = 'UB-BI-02')),
   ('1e000000-0000-0000-0000-000000000002', 4, '1c000000-0000-0000-0000-000000000014', null, 600, 120, (select id from public.ubicaciones where codigo = 'UB-BI-02'));
 select count(*) from public.confirmar_recepcion('1e000000-0000-0000-0000-000000000002');
+
+-- =====================================================================
+-- Fase 3 · Operaciones y ficha técnica (EJEMPLO)
+-- =====================================================================
+insert into public.valores_minuto (valor_minuto, indirecto_minuto, observacion)
+values (195, 85, 'Valor minuto e indirectos de EJEMPLO: reemplazar por los reales de costos');
+
+insert into public.tipos_maquina (codigo, nombre, precio_minuto) values ('PRE', 'Plancha / presilladora', 90) on conflict do nothing;
+
+-- Lista maestra de operaciones para camiseta (SAM y valores de EJEMPLO)
+insert into public.operaciones (codigo, nombre, familia_id, tipo_producto_id, proceso, sam, valor_destajo, tipo_maquina_id, parte, repeticiones, restrictiva, tipo)
+select v.codigo, v.nombre, f.id, t.id, v.proceso, v.sam, v.valor, (select id from public.tipos_maquina where codigo = v.maq), v.parte, v.rep, v.restr, v.tipo
+from (values
+  ('CAM-010','Unir hombros',                 'confeccion', 0.3500,  70, 'FIL', 'Cuerpo', 2.0, false, 'normal'),
+  ('CAM-020','Pegar cuello (rib)',           'confeccion', 0.5200, 105, 'FIL', 'Cuello', 1.0, true,  'normal'),
+  ('CAM-030','Recubrir cuello',              'confeccion', 0.4800,  95, 'REC', 'Cuello', 1.0, false, 'normal'),
+  ('CAM-040','Pegar tapa cuello',            'confeccion', 0.4100,  82, 'PLA', 'Cuello', 1.0, false, 'normal'),
+  ('CAM-050','Pegar mangas',                 'confeccion', 0.4500,  90, 'FIL', 'Mangas', 2.0, true,  'normal'),
+  ('CAM-060','Cerrar costados',              'confeccion', 0.6000, 120, 'FIL', 'Cuerpo', 2.0, false, 'normal'),
+  ('CAM-070','Dobladillo mangas',            'confeccion', 0.3000,  60, 'REC', 'Mangas', 2.0, false, 'normal'),
+  ('CAM-080','Dobladillo ruedo',             'confeccion', 0.4200,  84, 'REC', 'Cuerpo', 1.0, false, 'normal'),
+  ('CAM-090','Pegar marquilla',              'confeccion', 0.2500,  50, 'PLA', 'Cuerpo', 1.0, false, 'normal'),
+  ('CAM-100','Pulir y revisar',              'terminacion',0.4000,  70, 'MAN', null,     1.0, false, 'inspeccion'),
+  ('CAM-110','Planchar',                     'terminacion',0.3500,  60, 'PRE', null,     1.0, false, 'normal'),
+  ('CAM-120','Doblar y empacar',             'terminacion',0.3000,  50, 'MAN', null,     1.0, false, 'empaque')
+) as v(codigo, nombre, proceso, sam, valor, maq, parte, rep, restr, tipo)
+join public.familias_producto f on f.nombre = 'Camisetas'
+join public.tipos_producto t on t.familia_id = f.id and t.nombre = 'Camiseta cuello redondo';
+
+-- Referencia CAM-001 con su ficha v1 completa y aprobada
+do $$
+declare
+  v_ficha uuid;
+  v_cuerpo uuid; v_cuello uuid; v_mangas uuid;
+  v_negro uuid; v_gris uuid;
+  v_bom uuid;
+  t record;
+begin
+  v_ficha := public.nueva_referencia('CAM-001', 'Camiseta básica cuello redondo (EJEMPLO)',
+    (select id from public.familias_producto where nombre = 'Camisetas'),
+    (select id from public.tipos_producto where nombre = 'Camiseta cuello redondo'));
+  update public.ficha_versiones set composicion = '100% algodón', instrucciones_lavado = 'Lavar a máquina en agua fría. No usar blanqueador.',
+         precio_objetivo = 38000, curva_id = '18000000-0000-0000-0000-000000000001', descripcion = 'Camiseta básica de jersey con cuello en rib'
+   where id = v_ficha;
+  insert into public.ficha_tallas (ficha_id, talla_id, orden) select v_ficha, id, orden from public.tallas where codigo in ('S','M','L','XL');
+  insert into public.ficha_partes (ficha_id, nombre, orden) values (v_ficha, 'Cuerpo', 1) returning id into v_cuerpo;
+  insert into public.ficha_partes (ficha_id, nombre, orden) values (v_ficha, 'Mangas', 2) returning id into v_mangas;
+  insert into public.ficha_partes (ficha_id, nombre, orden, puede_cortarse_retazo) values (v_ficha, 'Cuello', 3, true) returning id into v_cuello;
+  select id into v_negro from public.colores where codigo = 'N';
+  select id into v_gris from public.colores where codigo = 'GJ';
+  insert into public.ficha_combinaciones (ficha_id, codigo, nombre, orden) values (v_ficha, 'N', 'Negro entero', 1), (v_ficha, 'GJ', 'Gris jaspe con cuello negro', 2);
+  insert into public.ficha_combinacion_partes (combinacion_id, parte_id, material_id, color_id)
+  select c.id, p.id, case when p.nombre = 'Cuello' then '1c000000-0000-0000-0000-000000000003'::uuid else '1c000000-0000-0000-0000-000000000001'::uuid end,
+         case when c.codigo = 'N' or p.nombre = 'Cuello' then v_negro else v_gris end
+  from public.ficha_combinaciones c, public.ficha_partes p where c.ficha_id = v_ficha and p.ficha_id = v_ficha;
+
+  -- Materiales: jersey para cuerpo y mangas (kg), rib para cuello, hilo, marquilla, bolsa
+  for t in select * from (values
+      ('1c000000-0000-0000-0000-000000000001', 'Cuerpo', 4.0, array[0.172, 0.185, 0.198, 0.213]),
+      ('1c000000-0000-0000-0000-000000000001', 'Mangas', 4.0, array[0.048, 0.052, 0.056, 0.060]),
+      ('1c000000-0000-0000-0000-000000000003', 'Cuello', 3.0, array[0.012, 0.013, 0.013, 0.014]),
+      ('1c000000-0000-0000-0000-000000000011', 'Cuerpo', 0.0, array[0.030, 0.032, 0.034, 0.036]),
+      ('1c000000-0000-0000-0000-000000000012', null,     0.0, array[1, 1, 1, 1]),
+      ('1c000000-0000-0000-0000-000000000014', null,     0.0, array[1, 1, 1, 1])
+    ) as x(material, parte, merma, consumos) loop
+    insert into public.ficha_bom (ficha_id, material_id, parte_id, merma_pct, orden)
+    values (v_ficha, t.material::uuid, (select id from public.ficha_partes where ficha_id = v_ficha and nombre = t.parte), t.merma,
+            (select count(*) from public.ficha_bom where ficha_id = v_ficha) + 1)
+    returning id into v_bom;
+    insert into public.ficha_bom_consumos (bom_id, talla_id, consumo)
+    select v_bom, ta.id, t.consumos[ta.orden - 1] from public.tallas ta where ta.codigo in ('S','M','L','XL');
+  end loop;
+
+  insert into public.ficha_medidas (ficha_id, punto_medida, orden) values (v_ficha, 'Contorno de pecho (1/2)', 1), (v_ficha, 'Largo total desde hombro', 2), (v_ficha, 'Largo de manga', 3);
+  insert into public.ficha_medida_tallas (medida_id, talla_id, valor_cm, tolerancia_cm)
+  select m.id, ta.id,
+         case m.orden when 1 then 48 + (ta.orden - 2) * 3 when 2 then 68 + (ta.orden - 2) * 2 else 19 + (ta.orden - 2) * 1 end,
+         case m.orden when 3 then 0.5 else 1 end
+  from public.ficha_medidas m, public.tallas ta where m.ficha_id = v_ficha and ta.codigo in ('S','M','L','XL');
+
+  insert into public.ficha_ruta (ficha_id, proceso, orden, modalidad, costo_externo_unidad) values
+    (v_ficha, 'corte', 1, 'interno', 0), (v_ficha, 'estampacion', 2, 'satelite', 1200), (v_ficha, 'confeccion', 3, 'interno', 0),
+    (v_ficha, 'terminacion', 4, 'interno', 0), (v_ficha, 'calidad', 5, 'interno', 0);
+  insert into public.ficha_artes (ficha_id, proceso, parte_id, nombre, tecnica, tintas, ancho_cm, alto_cm, ubicacion)
+  values (v_ficha, 'estampacion', v_cuerpo, 'Logo frontal (EJEMPLO)', 'Serigrafía plastisol', 'Blanco', 22, 8, 'Pecho, 8 cm bajo el cuello');
+
+  insert into public.ficha_operaciones (ficha_id, secuencia, operacion_id, parte_id, es_contadora)
+  select v_ficha, row_number() over (order by o.codigo) * 10, o.id,
+         (select id from public.ficha_partes where ficha_id = v_ficha and nombre = o.parte), o.codigo = 'CAM-080'
+  from public.operaciones o where o.codigo like 'CAM-%';
+
+  perform public.enviar_ficha_aprobacion(v_ficha);
+  perform public.decidir_ficha(v_ficha, 'diseno', true, 'EJEMPLO');
+  perform public.decidir_ficha(v_ficha, 'produccion', true, 'EJEMPLO');
+  perform public.decidir_ficha(v_ficha, 'costos', true, 'EJEMPLO');
+end $$;
