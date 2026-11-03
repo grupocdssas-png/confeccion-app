@@ -8,6 +8,7 @@ import '../../core/tema/colores.dart';
 import '../../core/tema/tema.dart';
 import '../inventario/comun_inventario.dart' show db, numeroCo, Tabla, pedirTexto;
 import 'datos_ficha.dart';
+import 'importar_secuencia.dart';
 
 // =====================================================================
 // 6. Ruta de procesos + secuencia de operaciones
@@ -78,7 +79,10 @@ class PasoRuta extends ConsumerWidget {
       Tarjeta(
         titulo: 'Secuencia de operaciones · SAM total ${Formato.numero(samTotal, decimales: 3)} min · destajo ${Formato.cop(valorTotal)} por prenda',
         accion: editable
-            ? FilledButton.icon(onPressed: () => _agregar(context, ref, ops), icon: const Icon(Icons.add), label: const Text('Agregar operaciones'))
+            ? Wrap(spacing: 8, children: [
+                OutlinedButton.icon(onPressed: () => importarSecuenciaSammu(context, ref, f), icon: const Icon(Icons.upload_file), label: const Text('Importar de SAMMU')),
+                FilledButton.icon(onPressed: () => _agregar(context, ref, ops), icon: const Icon(Icons.add), label: const Text('Agregar operaciones')),
+              ])
             : null,
         child: SingleChildScrollView(
           scrollDirection: Axis.horizontal,
@@ -100,8 +104,8 @@ class PasoRuta extends ConsumerWidget {
                   DataCell(Text('${o['operaciones']?['codigo']}', style: estiloCodigo(12.5))),
                   DataCell(Row(mainAxisSize: MainAxisSize.min, children: [
                     Text('${o['operaciones']?['nombre']}'),
-                    if (f['estado'] == 'borrador' && o['operaciones']?['sam'] != o['sam'])
-                      Tooltip(message: 'En la lista maestra el SAM es ${o['operaciones']?['sam']}: se actualiza al enviar a aprobación',
+                    if (o['operaciones']?['sam'] != o['sam'])
+                      Tooltip(message: 'En la lista maestra el SAM es ${o['operaciones']?['sam']}; esta ficha usa el suyo',
                           child: const Padding(padding: EdgeInsets.only(left: 6), child: Icon(Icons.info_outline, size: 16, color: Colores.ambar))),
                   ])),
                   DataCell(Pastilla(Colores.nombreProceso(o['proceso']), color: Colores.deProceso(o['proceso']))),
@@ -110,9 +114,11 @@ class PasoRuta extends ConsumerWidget {
                     items: [const DropdownMenuItem(value: null, child: Text('—')), for (final p in partes) DropdownMenuItem(value: p['id'] as String, child: Text('${p['nombre']}'))],
                     onChanged: editable ? (v) => cambiar(context, ref, f['id'], () => db.from('ficha_operaciones').update({'parte_id': v}).eq('id', o['id'])) : null,
                   ))),
-                  DataCell(Text(Formato.numero(o['sam'], decimales: 3))),
+                  DataCell(CampoGuardable(ancho: 78, numerico: true, alinearDerecha: true, habilitado: editable, valor: numTxt(o['sam']),
+                      onGuardar: (v) => cambiar(context, ref, f['id'], () => db.from('ficha_operaciones').update({'sam': numeroCo(v)}).eq('id', o['id'])))),
                   DataCell(Text(Formato.numero(60 / (o['sam'] as num), decimales: 1))),
-                  DataCell(Text(Formato.cop(o['valor_destajo']))),
+                  DataCell(CampoGuardable(ancho: 84, numerico: true, alinearDerecha: true, habilitado: editable, valor: numTxt(o['valor_destajo']),
+                      onGuardar: (v) => cambiar(context, ref, f['id'], () => db.from('ficha_operaciones').update({'valor_destajo': numeroCo(v) ?? 0}).eq('id', o['id'])))),
                   DataCell(Text('${o['tipos_maquina']?['codigo'] ?? '—'}', style: estiloCodigo(12.5, peso: FontWeight.w400))),
                   DataCell(CampoGuardable(ancho: 56, numerico: true, alinearDerecha: true, habilitado: editable, valor: numTxt(o['repeticiones']),
                       onGuardar: (v) => cambiar(context, ref, f['id'], () => db.from('ficha_operaciones').update({'repeticiones': numeroCo(v) ?? 1}).eq('id', o['id'])))),

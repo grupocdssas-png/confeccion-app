@@ -57,31 +57,32 @@ crear una nueva versión desde una ficha aprobada y subir un boceto a Storage.
 ![Costo estándar y aprobación](capturas/costo_aprobacion.png)
 ![Importador SAMMU](capturas/importador.png)
 
-## Ajustes con el archivo real de SAMMU (POLO_ECONOMICA001.csv)
+## Secuencia desde la ficha del producto (archivo real de SAMMU)
 
-El archivo real es la **secuencia de una referencia** (no la lista maestra), separado por `;` pero con **punto decimal**,
-en Windows-1252, sin código de operación y con la máquina como "Sitio de trabajo". Cambios:
+El reporte de SAMMU por producto (`POLO_ECONOMICA001.csv`) se importa **desde la ficha técnica**, paso 6 *Ruta y operaciones*,
+botón **Importar de SAMMU**. Llena la secuencia de esa ficha (reemplaza la que tenga) y su ruta de procesos.
 
-- **Error grave corregido:** el importador asumía coma decimal en los CSV con `;` y habría leído "0.33" como 33 minutos.
+- **El SAM y el valor de cada operación son de la ficha del producto.** La lista maestra solo recibe las operaciones que no
+  existan (código automático `OP-0001…`); si una ya existe con otro SAM, no se cambia y se avisa. En la ficha el SAM y el valor
+  se pueden ajustar a mano. Al aprobar y al crear una nueva versión se conserva el SAM de la ficha.
+- **Error grave corregido:** SAMMU separa con `;` pero usa punto decimal; el importador habría leído "0.33" como 33 minutos.
   Ahora el separador decimal se detecta por los datos.
-- Nuevo tipo **"Secuencia de una referencia"**: crea la referencia desde el nombre del archivo (o usa una ficha en borrador),
-  crea en la lista maestra las operaciones que falten (código automático `OP-0001…`), arma la secuencia y la ruta de la ficha.
-  Las operaciones se reconocen por nombre dentro del mismo tipo de producto; si el SAM cambió se actualiza y se informa.
-- Opción **"Crear tipos de máquina que no existan"** (PL1, FLTPS, FLT, RCB, OJ, BT, PLC, TERMOFIJADORA).
-- Campos nuevos de SAMMU guardados por operación: **unidades al marcar**, SAM de reproceso, operación de revisión
-  (queda como "inspección"), permitir cambiar unidades y sin talla/color. Se usan en la tablet (Fase 6).
+- La máquina viene como "Sitio de trabajo" (PL1, FLTPS, FLT, RCB, OJ, BT, PLC, TERMOFIJADORA): opción para crear los tipos que falten.
+- Campos nuevos por operación: **unidades al marcar**, SAM de reproceso, operación de revisión (queda como "inspección"),
+  permitir cambiar unidades y sin talla/color (se usan en la tablet, Fase 6).
 
-Resultado con el archivo completo, en el navegador contra Supabase: **34 filas correctas, 34 operaciones nuevas, 8 tipos de
-máquina nuevos, SAM total 14,0596 min** (igual al cálculo independiente sobre el archivo). Queda como prueba automática.
+Resultado con el archivo completo, en el navegador contra Supabase: **34 operaciones, 8 tipos de máquina nuevos, SAM total
+14,0596 min** (igual al cálculo independiente sobre el archivo). El archivo queda como prueba automática.
 
-![Importación del archivo real](capturas/importador_sammu_real.png)
+![Importación desde la ficha](capturas/importador_sammu_real.png)
+
+El importador general (*Lista de operaciones → Importar*) queda para la lista maestra, células, empleados y máquinas.
 
 ## Pendientes y decisiones
 
 - El archivo trae la columna **Precio vacía**: el valor a destajo de esas operaciones quedó en $ 0. Si SAMMU tiene los
   precios en otro reporte, lo importamos también; si no, se llenan en la lista maestra.
-- **SAM por tipo de producto:** si dos referencias del mismo tipo traen la misma operación con SAM distinto, la última
-  importación manda (y queda en el historial). Ver la pregunta en el resumen de la fase.
+- Cada producto conserva su propio SAM; la lista maestra queda como catálogo y valor por defecto al agregar operaciones a mano.
 - **OP activas desde SAMMU** se importan en la Fase 4, cuando existan las órdenes de producción.
 - La **gerencia** puede aprobar por cualquiera de las tres áreas (útil si falta alguien). Si prefiere que sean siempre tres personas distintas, lo restrinjo.
 - El **costo de materiales** usa el costo estándar de cada material. Si un material no tiene costo, aparece en rojo en el detalle

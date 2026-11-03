@@ -520,9 +520,11 @@ begin
     select v_nueva, a.proceso, mp.nuevo, a.nombre, a.archivo_path, a.tecnica, a.tintas, a.hilos, a.puntadas, a.ancho_cm, a.alto_cm, a.ubicacion, a.orden
     from ficha_artes a left join _mapa mp on mp.viejo = a.parte_id where a.ficha_id = p_origen;
   insert into ficha_ruta select v_nueva, proceso, orden, modalidad, costo_externo_unidad from ficha_ruta where ficha_id = p_origen;
-  -- las operaciones se vuelven a copiar de la lista maestra (SAM y valor vigentes)
-  insert into ficha_operaciones (ficha_id, secuencia, operacion_id, proceso, parte_id, repeticiones, es_contadora)
-    select v_nueva, x.secuencia, x.operacion_id, x.proceso, mp.nuevo, x.repeticiones, x.es_contadora
+  -- la secuencia se copia tal como está en la ficha de origen (SAM y valor propios del producto)
+  insert into ficha_operaciones (ficha_id, secuencia, operacion_id, proceso, parte_id, repeticiones, es_contadora,
+                                 sam, valor_destajo, agrega_minutos_sam, tipo_maquina_id)
+    select v_nueva, x.secuencia, x.operacion_id, x.proceso, mp.nuevo, x.repeticiones, x.es_contadora,
+           x.sam, x.valor_destajo, x.agrega_minutos_sam, x.tipo_maquina_id
     from ficha_operaciones x left join _mapa mp on mp.viejo = x.parte_id where x.ficha_id = p_origen;
   return v_nueva;
 end $$;
@@ -583,9 +585,7 @@ begin
   if not exists (select 1 from valor_minuto_vigente()) then raise exception 'Configure el valor del minuto antes de enviar a aprobación'; end if;
 
   perform set_config('app.ficha_sistema', 'si', true);
-  -- SAM y valor vigentes de la lista maestra quedan copiados en la ficha
-  update ficha_operaciones fo set sam = o.sam, valor_destajo = o.valor_destajo, agrega_minutos_sam = o.agrega_minutos_sam
-  from operaciones o where o.id = fo.operacion_id and fo.ficha_id = p_ficha;
+  -- El SAM y el valor de cada operación son los de la ficha del producto (no se toman de la lista maestra).
   -- costo estándar congelado
   delete from ficha_costo_estandar where ficha_id = p_ficha;
   insert into ficha_costo_estandar (ficha_id, combinacion_id, concepto, valor, detalle)

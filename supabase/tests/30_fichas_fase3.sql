@@ -95,6 +95,8 @@ select pg_temp.ok((select sam_anterior = 0.35 and sam_nuevo = 0.38 and origen = 
                    where o.codigo = 'CAM-010' order by h.id desc limit 1), 'Historial de SAM: 0,35 → 0,38');
 select pg_temp.ok((select fo.sam from ficha_operaciones fo join operaciones o on o.id = fo.operacion_id where fo.ficha_id = (select v1 from f) and o.codigo = 'CAM-010') = 0.35,
                   'La ficha aprobada conserva el SAM con que se aprobó');
+select pg_temp.ok((select fo.sam from ficha_operaciones fo join operaciones o on o.id = fo.operacion_id where fo.ficha_id = (select id from v2) and o.codigo = 'CAM-010') = 0.35,
+                  'La nueva versión hereda el SAM de la ficha anterior, no el de la lista maestra');
 select pg_temp.ok((select unidades_hora from operaciones where codigo = 'CAM-010') = round(60 / 0.38, 2), 'Unidades por hora = 60 / SAM');
 
 -- ---------- Validación y aprobación por áreas ----------
@@ -105,8 +107,8 @@ select pg_temp.falla($$select enviar_ficha_aprobacion((select id from incompleta
 select pg_temp.ok(array_length(validar_ficha((select id from incompleta)), 1) >= 6, 'validar_ficha() lista lo que falta');
 
 select enviar_ficha_aprobacion((select id from v2));
-select pg_temp.ok((select fo.sam from ficha_operaciones fo join operaciones o on o.id = fo.operacion_id where fo.ficha_id = (select id from v2) and o.codigo = 'CAM-010') = 0.38,
-                  'Al enviar, v2 toma el SAM vigente de la lista maestra');
+select pg_temp.ok((select fo.sam from ficha_operaciones fo join operaciones o on o.id = fo.operacion_id where fo.ficha_id = (select id from v2) and o.codigo = 'CAM-010') = 0.35,
+                  'Al enviar, v2 conserva el SAM de su ficha (no lo cambia la lista maestra)');
 select pg_temp.falla($$update ficha_partes set orden = 9 where ficha_id = (select id from v2)$$, 'Editar una ficha en aprobación');
 select pg_temp.falla($$select decidir_ficha((select id from v2), 'costos', true)$$, 'Diseño aprobando por Costos');
 select pg_temp.falla($$select decidir_ficha((select id from v2), 'diseno', false)$$, 'Rechazar sin motivo');
@@ -206,8 +208,12 @@ create temp table imp_polo2 as select importar('secuencia',
   jsonb_set((select f from filas_polo), '{2,sam}', '"0.45"'), 'POLO_ECONOMICA001.csv', jsonb_build_object('ficha_id', (select id from polo))) as r;
 reset role;
 select pg_temp.ok((select (r->'resumen'->>'operaciones_nuevas')::int = 0 and (r->'resumen'->>'operaciones_existentes')::int = 6
-                          and r->'resumen'->'sam_cambiados'->0->>'nombre' = 'UNIR HOMBROS' from imp_polo2),
-                  'Reimportar: no duplica operaciones e informa el SAM que cambió');
+                          and r->'resumen'->'sam_distintos_maestra'->0->>'nombre' = 'UNIR HOMBROS' from imp_polo2),
+                  'Reimportar: no duplica operaciones e informa el SAM distinto al de la lista maestra');
+select pg_temp.ok((select fo.sam from ficha_operaciones fo join operaciones o on o.id = fo.operacion_id
+                   where fo.ficha_id = (select id from polo) and o.nombre = 'UNIR HOMBROS') = 0.45
+                  and (select sam from operaciones where nombre = 'UNIR HOMBROS' and tipo_producto_id = (select id from tipos_producto where nombre = 'Camiseta polo')) = 0.41,
+                  'El SAM queda en la ficha del producto (0,45) y la lista maestra no cambia (0,41)');
 select pg_temp.ok((select count(*) from ficha_operaciones where ficha_id = (select id from polo)) = 6, 'Reimportar reemplaza la secuencia (no la duplica)');
 select pg_temp.ok((select sam from operaciones where codigo = 'CAM-010') = 0.36, 'Operación de otro tipo de producto con el mismo nombre no se toca');
 select pg_temp.falla($$select importar('secuencia', '[]'::jsonb, null, jsonb_build_object('ficha_id', (select v1 from f)))$$, 'Importar secuencia sobre una ficha aprobada');

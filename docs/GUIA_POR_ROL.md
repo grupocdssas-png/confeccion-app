@@ -41,7 +41,8 @@ Nunca desinstale la app ni borre sus datos con registros pendientes: se perderí
 ## Ficha técnica (Diseño)
 
 1. *Fichas técnicas → Nueva referencia*: crea la versión 1 en borrador.
-2. Complete los 7 pasos. Todo se guarda solo al salir de cada campo.
+2. Complete los 7 pasos. Todo se guarda solo al salir de cada campo. La secuencia de operaciones se puede traer de SAMMU
+   en el paso 6 (*Importar de SAMMU*, con el reporte de la referencia).
 3. En el paso 7 la ficha dice qué le falta. Cuando esté completa: **Enviar a aprobación**.
 4. Diseño, Producción y Costos aprueban cada uno su parte. Si alguien rechaza, vuelve a borrador con el motivo.
 5. Una ficha aprobada no se toca: para cambiarla, **Nueva versión**. Las OP que ya la usan conservan la anterior.

@@ -170,6 +170,12 @@ begin
                     nullif(trim(f->>'parte'), ''), coalesce(a_booleano(f->>'restrictiva'), false))
             returning * into v_op;
             v_nuevas := v_nuevas + 1;
+          elsif p_tipo = 'secuencia' then
+            -- La ficha del producto manda: la lista maestra no se toca; solo se informa si el SAM es distinto
+            v_existentes := v_existentes + 1;
+            if v_op.sam <> v_sam then
+              v_sam_cambiados := v_sam_cambiados || jsonb_build_object('codigo', v_op.codigo, 'nombre', v_op.nombre, 'maestra', v_op.sam, 'ficha', v_sam);
+            end if;
           else
             v_existentes := v_existentes + 1;
             if v_op.sam <> v_sam then
@@ -194,9 +200,11 @@ begin
 
           if p_tipo = 'secuencia' then
             if (f->>'secuencia') is null then raise exception 'Falta el número de secuencia'; end if;
-            insert into ficha_operaciones (ficha_id, secuencia, operacion_id, proceso, repeticiones, es_contadora, unidades_marcacion,
-                                           sam_reproceso, permite_cambiar_unidades, sin_talla_color)
-            values (v_ficha.id, (f->>'secuencia')::numeric::int, v_op.id, v_proceso, coalesce((f->>'repeticiones')::numeric, 1),
+            insert into ficha_operaciones (ficha_id, secuencia, operacion_id, proceso, sam, valor_destajo, tipo_maquina_id, repeticiones,
+                                           es_contadora, unidades_marcacion, sam_reproceso, permite_cambiar_unidades, sin_talla_color)
+            values (v_ficha.id, (f->>'secuencia')::numeric::int, v_op.id, v_proceso, v_sam,
+                    coalesce((f->>'valor_destajo')::numeric, v_op.valor_destajo), coalesce(v_maq, v_op.tipo_maquina_id),
+                    coalesce((f->>'repeticiones')::numeric, 1),
                     coalesce(a_booleano(f->>'contadora'), false), (f->>'unidades_marcacion')::int, (f->>'sam_reproceso')::numeric,
                     a_booleano(f->>'cambiar_unidades'), a_booleano(f->>'sin_talla_color'));
             -- la ruta de la ficha incluye los procesos de la secuencia
@@ -244,7 +252,8 @@ begin
   end loop;
 
   v_resumen := jsonb_build_object(
-    'operaciones_nuevas', v_nuevas, 'operaciones_existentes', v_existentes, 'sam_cambiados', v_sam_cambiados,
+    'operaciones_nuevas', v_nuevas, 'operaciones_existentes', v_existentes,
+    case when p_tipo = 'secuencia' then 'sam_distintos_maestra' else 'sam_cambiados' end, v_sam_cambiados,
     'maquinas_creadas', (select count(*) from tipos_maquina) - v_maquinas_antes,
     'sam_total', case when p_tipo = 'secuencia' then sam_total_ficha(v_ficha.id) end,
     'ficha_id', v_ficha.id);

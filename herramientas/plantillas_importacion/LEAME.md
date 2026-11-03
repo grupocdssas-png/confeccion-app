@@ -13,4 +13,4 @@ Los tipos de máquina (PLA, FIL, REC…) y las familias deben existir antes.
 ## Secuencia de una referencia (formato real de SAMMU)
 
 El reporte de SAMMU por referencia (`Secuencia;Nombre;Sitio de trabajo;Sam;Proceso;Repeticiones;…`) se importa tal cual
-con el tipo **"Secuencia de una referencia"**. No hay que convertirlo ni cambiarle el formato.
+**desde la ficha técnica del producto** (paso 6, botón *Importar de SAMMU*). No hay que convertirlo ni cambiarle el formato.
