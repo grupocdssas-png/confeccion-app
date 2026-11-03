@@ -212,7 +212,7 @@ class PasoCosto extends ConsumerStatefulWidget {
 }
 
 class _PasoCostoState extends ConsumerState<PasoCosto> {
-  late Future<(List<Map<String, dynamic>>, List<String>)> _datos = _cargar();
+  late Future<(List<Map<String, dynamic>>, List<String>, List<Map<String, dynamic>>)> _datos = _cargar();
 
   @override
   void didUpdateWidget(covariant PasoCosto old) {
@@ -220,9 +220,14 @@ class _PasoCostoState extends ConsumerState<PasoCosto> {
     if (old.ficha != widget.ficha) _datos = _cargar();
   }
 
-  Future<(List<Map<String, dynamic>>, List<String>)> _cargar() async {
+  Future<(List<Map<String, dynamic>>, List<String>, List<Map<String, dynamic>>)> _cargar() async {
     final f = widget.ficha;
     final faltan = (await db.rpc('validar_ficha', params: {'p_ficha': f['id']}) as List).cast<String>();
+    // Costo con los valores de hoy (valor minuto vigente y costos de materiales actuales)
+    var hoy = <Map<String, dynamic>>[];
+    try {
+      hoy = (await db.rpc('calcular_costo_estandar', params: {'p_ficha': f['id']}) as List).cast<Map<String, dynamic>>();
+    } catch (_) {}
     if (f['estado'] != 'borrador') {
       // costo congelado al enviar a aprobación
       final filas = (f['ficha_costo_estandar'] as List).cast<Map<String, dynamic>>();
@@ -232,13 +237,9 @@ class _PasoCostoState extends ConsumerState<PasoCosto> {
         c[x['concepto']] = x['valor'];
         if (x['concepto'] == 'materiales') c['detalle'] = x['detalle']; // incluye materiales, SAM y valor minuto
       }
-      return (porComb.values.toList(), faltan);
+      return (porComb.values.toList(), faltan, hoy);
     }
-    try {
-      return ((await db.rpc('calcular_costo_estandar', params: {'p_ficha': f['id']}) as List).cast<Map<String, dynamic>>(), faltan);
-    } catch (_) {
-      return (<Map<String, dynamic>>[], faltan);
-    }
+    return (hoy, faltan, hoy);
   }
 
   @override
@@ -251,7 +252,9 @@ class _PasoCostoState extends ConsumerState<PasoCosto> {
       future: _datos,
       builder: (context, s) {
         if (!s.hasData) return const LinearProgressIndicator();
-        final (costos, faltan) = s.data!;
+        final (costos, faltan, hoy) = s.data!;
+        final totalHoy = {for (final c in hoy) c['combinacion_id']: c['total']};
+        final congelado = f['estado'] != 'borrador';
         return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
           Tarjeta(
             titulo: f['estado'] == 'borrador' ? 'Costo estándar por prenda (cálculo en vivo)' : 'Costo estándar por prenda (congelado al enviar a aprobación)',
@@ -259,23 +262,36 @@ class _PasoCostoState extends ConsumerState<PasoCosto> {
                 ? Text('Complete tallas, combinaciones y materiales para calcular el costo.', style: estilo(14, color: Colores.textoSuave))
                 : Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
                     Tabla(
-                      columnas: const ['Combinación', 'Materiales', 'Mano de obra', 'Procesos externos', 'Indirectos', 'Total', 'Margen vs precio objetivo'],
-                      numericas: const {1, 2, 3, 4, 5},
+                      columnas: [
+                        'Combinación', 'Materiales', 'Mano de obra', 'Procesos externos', 'Indirectos', congelado ? 'Total aprobado' : 'Total',
+                        if (congelado) 'Total hoy', 'Margen',
+                      ],
+                      numericas: congelado ? const {1, 2, 3, 4, 5, 6} : const {1, 2, 3, 4, 5},
                       filas: [
                         for (final c in costos)
                           DataRow(cells: [
                             DataCell(Text('${combs[c['combinacion_id']]?['codigo']} · ${combs[c['combinacion_id']]?['nombre']}')),
                             for (final k in ['materiales', 'mano_obra', 'externos', 'indirectos']) DataCell(Text(Formato.cop(c[k] ?? 0))),
                             DataCell(Text(Formato.cop(c['total'] ?? 0), style: const TextStyle(fontWeight: FontWeight.w700))),
+                            if (congelado)
+                              DataCell(Text(totalHoy[c['combinacion_id']] == null ? '—' : Formato.cop(totalHoy[c['combinacion_id']]),
+                                  style: TextStyle(fontWeight: FontWeight.w600,
+                                      color: (totalHoy[c['combinacion_id']] ?? c['total']) != c['total'] ? Colores.ambar : null))),
                             DataCell(precio == null || precio == 0
                                 ? const Text('—')
                                 : () {
-                                    final m = (precio - (c['total'] as num)) / precio * 100;
+                                    final m = (precio - ((congelado ? totalHoy[c['combinacion_id']] : null) ?? c['total'] as num)) / precio * 100;
                                     return Text(Formato.porcentaje(m), style: TextStyle(color: m < 30 ? Colores.rojo : m < 45 ? Colores.ambar : Colores.verde, fontWeight: FontWeight.w600));
                                   }()),
                           ]),
                       ],
                     ),
+                    if (congelado)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 8),
+                        child: Text('"Total hoy" usa el valor minuto vigente y los costos actuales de los materiales; el margen se calcula con él.',
+                            style: estilo(12.5, color: Colores.textoSuave)),
+                      ),
                     if (costos.first['detalle']?['sam_total'] != null)
                       Padding(
                         padding: const EdgeInsets.only(top: 8),
@@ -332,7 +348,11 @@ class _PasoCostoState extends ConsumerState<PasoCosto> {
                     ('produccion', 'Producción', ['jefe_produccion', 'gerencia']),
                     ('costos', 'Costos', ['costos', 'gerencia']),
                   ])
-                    _Area(ficha: f, area: area, nombre: nombre, puede: sesion != null && sesion.roles.any(roles.contains)),
+                    _Area(ficha: f, area: area, nombre: nombre,
+                        puede: sesion != null && sesion.roles.any(roles.contains) &&
+                            // tres personas distintas: quien ya aprobó otra área no aprueba esta
+                            !(f['ficha_aprobaciones'] as List).any((a) => a['usuario_id'] == sesion.usuarioId && a['decision'] == 'aprobada' &&
+                                !DateTime.parse(a['fecha']).isBefore(DateTime.parse(f['enviada_en'])))),
                 ]),
                 const SizedBox(height: 12),
                 if (sesion?.puedeEditar('ficha_tecnica') ?? false)

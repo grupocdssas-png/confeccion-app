@@ -623,6 +623,12 @@ begin
   if exists (select 1 from ficha_aprobaciones where ficha_id = p_ficha and area = p_area and fecha >= f.enviada_en) then
     raise exception 'El área % ya decidió sobre esta versión', p_area;
   end if;
+  -- Se exigen tres personas distintas: nadie aprueba por dos áreas la misma versión (ni gerencia)
+  if p_aprobar and auth.uid() is not null and exists (
+       select 1 from ficha_aprobaciones where ficha_id = p_ficha and usuario_id = auth.uid()
+          and decision = 'aprobada' and fecha >= f.enviada_en) then
+    raise exception 'Usted ya aprobó esta versión por otra área: cada área la aprueba una persona distinta';
+  end if;
 
   insert into ficha_aprobaciones (ficha_id, area, decision, comentario)
   values (p_ficha, p_area, case when p_aprobar then 'aprobada' else 'rechazada' end, p_comentario);

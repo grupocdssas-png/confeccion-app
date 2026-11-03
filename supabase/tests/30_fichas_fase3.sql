@@ -117,6 +117,15 @@ select pg_temp.ok((select estado = 'borrador' and comentario_rechazo like '%mang
 select enviar_ficha_aprobacion((select id from v2));
 select decidir_ficha((select id from v2), 'diseno', true);
 select pg_temp.falla($$select decidir_ficha((select id from v2), 'diseno', true)$$, 'La misma área decide dos veces');
+set request.jwt.claim.sub = 'aaaaaaaa-0000-0000-0000-000000000001';  -- gerencia
+select decidir_ficha((select id from v2), 'produccion', true);
+select pg_temp.falla($$select decidir_ficha((select id from v2), 'costos', true)$$, 'Gerencia aprobando por una segunda área (se exigen 3 personas)');
+reset role;
+-- se deshace la aprobación de gerencia para seguir con el flujo normal (solo en la prueba)
+alter table ficha_aprobaciones disable trigger ficha_aprobaciones_inmutable;
+delete from ficha_aprobaciones where ficha_id = (select id from v2) and usuario_id = 'aaaaaaaa-0000-0000-0000-000000000001';
+alter table ficha_aprobaciones enable trigger ficha_aprobaciones_inmutable;
+set role authenticated;
 set request.jwt.claim.sub = 'aaaaaaaa-0000-0000-0000-000000000002';  -- jefe de producción
 select pg_temp.ok(decidir_ficha((select id from v2), 'produccion', true) = 'en_aprobacion', 'Con 2 de 3 áreas sigue en aprobación');
 set request.jwt.claim.sub = 'aaaaaaaa-0000-0000-0000-000000000008';  -- costos

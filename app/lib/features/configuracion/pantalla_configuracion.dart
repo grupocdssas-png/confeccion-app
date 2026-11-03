@@ -143,7 +143,7 @@ class _Seccion extends StatelessWidget {
 
 
 final _valoresMinutoProvider = FutureProvider.autoDispose((ref) =>
-    Supabase.instance.client.from('valores_minuto').select().order('vigente_desde', ascending: false).limit(20));
+    Supabase.instance.client.from('valores_minuto').select().order('vigente_desde', ascending: false).order('creado_en', ascending: false).limit(20));
 
 /// Valor del minuto de mano de obra e indirectos por minuto (para el costo estándar).
 class _ValorMinuto extends ConsumerWidget {
@@ -160,9 +160,20 @@ class _ValorMinuto extends ConsumerWidget {
               label: const Text('Nuevo valor vigente'),
               onPressed: () async {
                 final vm = TextEditingController(), ind = TextEditingController(), obs = TextEditingController();
-                final ok = await showDialog<bool>(context: context, builder: (d) => AlertDialog(
+                var desde = DateTime.now();
+                final ok = await showDialog<bool>(context: context, builder: (d) => StatefulBuilder(builder: (d, set) => AlertDialog(
                       title: const Text('Nuevo valor del minuto'),
                       content: SizedBox(width: 400, child: Column(mainAxisSize: MainAxisSize.min, children: [
+                        ListTile(
+                          contentPadding: EdgeInsets.zero,
+                          title: const Text('Vigente desde'),
+                          subtitle: Text(Formato.fecha(DateTime.utc(desde.year, desde.month, desde.day, 12))),
+                          trailing: const Icon(Icons.calendar_month_outlined),
+                          onTap: () async {
+                            final f = await showDatePicker(context: d, initialDate: desde, firstDate: DateTime(2020), lastDate: DateTime(2100));
+                            if (f != null) set(() => desde = f);
+                          },
+                        ),
                         TextField(controller: vm, decoration: const InputDecoration(labelText: 'Valor minuto mano de obra (COP)')),
                         const SizedBox(height: 10),
                         TextField(controller: ind, decoration: const InputDecoration(labelText: 'Indirectos por minuto (COP)')),
@@ -171,11 +182,13 @@ class _ValorMinuto extends ConsumerWidget {
                       ])),
                       actions: [TextButton(onPressed: () => Navigator.pop(d, false), child: const Text('Cancelar')),
                         FilledButton(onPressed: () => Navigator.pop(d, true), child: const Text('Guardar'))],
-                    ));
+                    )));
                 if (ok != true) return;
                 double? n(String t) => double.tryParse(t.replaceAll('.', '').replaceAll(',', '.'));
+                final fecha = '${desde.year}-${desde.month.toString().padLeft(2, '0')}-${desde.day.toString().padLeft(2, '0')}';
                 try {
-                  await Supabase.instance.client.from('valores_minuto').insert({'valor_minuto': n(vm.text), 'indirecto_minuto': n(ind.text) ?? 0, 'observacion': obs.text});
+                  await Supabase.instance.client.from('valores_minuto')
+                      .insert({'valor_minuto': n(vm.text), 'indirecto_minuto': n(ind.text) ?? 0, 'observacion': obs.text, 'vigente_desde': fecha});
                   ref.invalidate(_valoresMinutoProvider);
                 } catch (e) {
                   if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e')));
@@ -189,17 +202,28 @@ class _ValorMinuto extends ConsumerWidget {
           for (final (i, v) in l.indexed)
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 3),
-              child: Text('${i == 0 ? 'Vigente' : 'Anterior'} desde ${Formato.fecha(DateTime.parse('${v['vigente_desde']}T12:00:00Z'))}: '
+              child: Text('${_estadoValor(l, i)} desde ${Formato.fecha(DateTime.parse('${v['vigente_desde']}T12:00:00Z'))}: '
                   'minuto ${Formato.cop(v['valor_minuto'])} · indirectos ${Formato.cop(v['indirecto_minuto'])}'
                   '${(v['observacion'] ?? '').toString().isEmpty ? '' : ' · ${v['observacion']}'}',
-                  style: estilo(14, peso: i == 0 ? FontWeight.w600 : FontWeight.w400, color: i == 0 ? Colores.texto : Colores.textoSuave)),
+                  style: estilo(14, peso: _estadoValor(l, i) == 'Vigente' ? FontWeight.w600 : FontWeight.w400,
+                      color: _estadoValor(l, i) == 'Vigente' ? Colores.texto : Colores.textoSuave)),
             ),
           if (l.isEmpty) Text('Sin configurar: el costo estándar no se puede calcular.', style: estilo(14, color: Colores.rojo)),
           const SizedBox(height: 6),
-          Text('Un cambio aplica a las fichas que se envíen a aprobación desde ahora; las aprobadas conservan su costo.',
+          Text('El valor minuto no se guarda en la ficha: la ficha guarda los minutos (SAM). Las fichas aprobadas muestran su costo de aprobación '
+              'y también el costo actualizado con el valor vigente. Las OP usarán el valor vigente en la fecha en que se producen.',
               style: estilo(12.5, color: Colores.textoSuave)),
         ]),
       ),
     );
   }
+}
+
+/// "Programado" (fecha futura), "Vigente" (el más reciente ya en vigor) o "Anterior". La lista viene de la más nueva a la más vieja.
+String _estadoValor(List<Map<String, dynamic>> l, int i) {
+  final hoy = DateTime.now();
+  final fecha = DateTime.parse('${l[i]['vigente_desde']}');
+  if (fecha.isAfter(DateTime(hoy.year, hoy.month, hoy.day))) return 'Programado';
+  final primeroVigente = l.indexWhere((v) => !DateTime.parse('${v['vigente_desde']}').isAfter(DateTime(hoy.year, hoy.month, hoy.day)));
+  return i == primeroVigente ? 'Vigente' : 'Anterior';
 }
