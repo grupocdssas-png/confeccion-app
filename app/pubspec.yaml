@@ -7,9 +7,12 @@ environment:
   sdk: ^3.13.7
 
 dependencies:
+  archive: ^4.6.0
   barcode_widget: ^2.0.4
+  csv: ^8.0.0
   drift: ^2.35.3
   drift_sqlite_async: ^0.3.1
+  file_picker: ^13.3.2
   flutter:
     sdk: flutter
   flutter_localizations:
@@ -26,6 +29,7 @@ dependencies:
   shared_preferences: ^2.5.6
   supabase_flutter: ^2.18.3
   uuid: ^4.6.0
+  xml: ^7.1.0
 
 dev_dependencies:
   flutter_test:

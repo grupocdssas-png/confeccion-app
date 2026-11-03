@@ -97,6 +97,8 @@ class PantallaConfiguracion extends ConsumerWidget {
           Text('${e['intentos']}'),
         ],
       ),
+      const SizedBox(height: 20),
+      const _ValorMinuto(),
       const SizedBox(height: 12),
       Text('Crear usuarios y asignar roles desde esta pantalla llega en una fase posterior (requiere una función de servidor segura). '
           'Por ahora se usan los usuarios de ejemplo del README.', style: estilo(12.5, color: Colores.textoSuave)),
@@ -133,6 +135,69 @@ class _Seccion extends StatelessWidget {
                 rows: [for (final f in r.datos) DataRow(cells: [for (final w in fila(f)) DataCell(w)])],
               ),
             ),
+        ]),
+      ),
+    );
+  }
+}
+
+
+final _valoresMinutoProvider = FutureProvider.autoDispose((ref) =>
+    Supabase.instance.client.from('valores_minuto').select().order('vigente_desde', ascending: false).limit(20));
+
+/// Valor del minuto de mano de obra e indirectos por minuto (para el costo estándar).
+class _ValorMinuto extends ConsumerWidget {
+  const _ValorMinuto();
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final datos = ref.watch(_valoresMinutoProvider);
+    final editar = ref.watch(sesionProvider).value?.puedeEditar('costos') ?? false;
+    return Tarjeta(
+      titulo: 'Valor del minuto e indirectos',
+      accion: editar
+          ? FilledButton.icon(
+              icon: const Icon(Icons.add),
+              label: const Text('Nuevo valor vigente'),
+              onPressed: () async {
+                final vm = TextEditingController(), ind = TextEditingController(), obs = TextEditingController();
+                final ok = await showDialog<bool>(context: context, builder: (d) => AlertDialog(
+                      title: const Text('Nuevo valor del minuto'),
+                      content: SizedBox(width: 400, child: Column(mainAxisSize: MainAxisSize.min, children: [
+                        TextField(controller: vm, decoration: const InputDecoration(labelText: 'Valor minuto mano de obra (COP)')),
+                        const SizedBox(height: 10),
+                        TextField(controller: ind, decoration: const InputDecoration(labelText: 'Indirectos por minuto (COP)')),
+                        const SizedBox(height: 10),
+                        TextField(controller: obs, decoration: const InputDecoration(labelText: 'Observación')),
+                      ])),
+                      actions: [TextButton(onPressed: () => Navigator.pop(d, false), child: const Text('Cancelar')),
+                        FilledButton(onPressed: () => Navigator.pop(d, true), child: const Text('Guardar'))],
+                    ));
+                if (ok != true) return;
+                double? n(String t) => double.tryParse(t.replaceAll('.', '').replaceAll(',', '.'));
+                try {
+                  await Supabase.instance.client.from('valores_minuto').insert({'valor_minuto': n(vm.text), 'indirecto_minuto': n(ind.text) ?? 0, 'observacion': obs.text});
+                  ref.invalidate(_valoresMinutoProvider);
+                } catch (e) {
+                  if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e')));
+                }
+              })
+          : null,
+      child: datos.when(
+        loading: () => const LinearProgressIndicator(),
+        error: (e, _) => Text('$e'),
+        data: (l) => Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          for (final (i, v) in l.indexed)
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 3),
+              child: Text('${i == 0 ? 'Vigente' : 'Anterior'} desde ${Formato.fecha(DateTime.parse('${v['vigente_desde']}T12:00:00Z'))}: '
+                  'minuto ${Formato.cop(v['valor_minuto'])} · indirectos ${Formato.cop(v['indirecto_minuto'])}'
+                  '${(v['observacion'] ?? '').toString().isEmpty ? '' : ' · ${v['observacion']}'}',
+                  style: estilo(14, peso: i == 0 ? FontWeight.w600 : FontWeight.w400, color: i == 0 ? Colores.texto : Colores.textoSuave)),
+            ),
+          if (l.isEmpty) Text('Sin configurar: el costo estándar no se puede calcular.', style: estilo(14, color: Colores.rojo)),
+          const SizedBox(height: 6),
+          Text('Un cambio aplica a las fichas que se envíen a aprobación desde ahora; las aprobadas conservan su costo.',
+              style: estilo(12.5, color: Colores.textoSuave)),
         ]),
       ),
     );
