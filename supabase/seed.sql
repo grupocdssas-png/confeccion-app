@@ -142,3 +142,66 @@ insert into public.estaciones (id, codigo, nombre, tipo, proceso, celula_id, bod
   ('1b000000-0000-0000-0000-000000000002','MOD1','Tablet Módulo 1','modulo','confeccion','15000000-0000-0000-0000-000000000001',null),
   ('1b000000-0000-0000-0000-000000000003','C01','Mesa de corte 1','mesa_corte','corte','15000000-0000-0000-0000-000000000003','1a000000-0000-0000-0000-000000000001'),
   ('1b000000-0000-0000-0000-000000000004','BOD','Bodega de telas','bodega',null,null,'1a000000-0000-0000-0000-000000000001');
+
+-- =====================================================================
+-- Fase 2 · Inventarios (EJEMPLO)
+-- =====================================================================
+insert into public.ubicaciones (bodega_id, codigo, descripcion) values
+  ('1a000000-0000-0000-0000-000000000001','UB-BT-A03','Estantería A, nivel 3'),
+  ('1a000000-0000-0000-0000-000000000001','UB-BT-B01','Estantería B, nivel 1'),
+  ('1a000000-0000-0000-0000-000000000001','UB-BT-RET','Zona de retazos'),
+  ('1a000000-0000-0000-0000-000000000002','UB-BI-02','Insumos, estante 2');
+
+insert into public.materiales (id, codigo, tipo, categoria_id, nombre, unidad, composicion, ancho_nominal_cm, gramaje_gm2,
+                               rendimiento_m_kg, maneja_rollos, proveedor_id, costo_estandar, stock_minimo)
+select v.id::uuid, v.codigo, 'tela', c.id, v.nombre, v.unidad, v.comp, v.ancho, v.gramaje, v.rend, true,
+       (select id from public.proveedores where nit = '900000001-1'), v.costo, v.minimo
+from (values
+  ('1c000000-0000-0000-0000-000000000001','TEL-JER30','Jersey 30/1 algodón peinado (EJEMPLO)','kg','100% algodón',180.0,160.0,3.45,32000,150),
+  ('1c000000-0000-0000-0000-000000000002','TEL-FTE','French terry perchado (EJEMPLO)','kg','80% algodón 20% poliéster',185.0,280.0,1.95,38500,120),
+  ('1c000000-0000-0000-0000-000000000003','TEL-RIB','Rib 1x1 (EJEMPLO)','kg','95% algodón 5% elastano',100.0,220.0,4.55,35000,40),
+  ('1c000000-0000-0000-0000-000000000004','TEL-ANT','Antifluido plano (EJEMPLO)','m','100% poliéster',150.0,110.0,6.06,9800,200)
+) as v(id, codigo, nombre, unidad, comp, ancho, gramaje, rend, costo, minimo)
+join public.categorias_material c on c.nombre = case when v.codigo = 'TEL-ANT' then 'Tejido plano'
+                                                    when v.codigo = 'TEL-RIB' then 'Rib y complementos' else 'Tejido de punto' end;
+
+insert into public.materiales (id, codigo, tipo, categoria_id, nombre, unidad, maneja_color, proveedor_id, costo_estandar, stock_minimo)
+select v.id::uuid, v.codigo, 'insumo', c.id, v.nombre, v.unidad, v.color, (select id from public.proveedores where nit = '900000002-2'), v.costo, v.minimo
+from (values
+  ('1c000000-0000-0000-0000-000000000011','INS-HIL40','Hilo poliéster 40/2 cono 5000 m (EJEMPLO)','cono',true,'Hilos',6500,30),
+  ('1c000000-0000-0000-0000-000000000012','INS-MARQ','Marquilla tejida de marca (EJEMPLO)','und',false,'Marquillas y etiquetas',180,2000),
+  ('1c000000-0000-0000-0000-000000000013','INS-CORD','Cordón plano 1 cm (EJEMPLO)','m',true,'Elásticos y cordones',650,300),
+  ('1c000000-0000-0000-0000-000000000014','INS-BOLSA','Bolsa plástica con adhesivo 30x40 (EJEMPLO)','und',false,'Empaque',120,1000)
+) as v(id, codigo, nombre, unidad, color, cat, costo, minimo)
+join public.categorias_material c on c.nombre = v.cat;
+
+insert into public.impresoras (id, nombre, modelo, conexion, ip, material) values
+  ('1d000000-0000-0000-0000-000000000001','Zebra bodega (EJEMPLO)','ZD421t','tcp','192.168.1.50','transferencia'),
+  ('1d000000-0000-0000-0000-000000000002','Zebra mesa de corte (EJEMPLO)','ZD421d','tcp','192.168.1.51','termico_directo');
+update public.estaciones set impresora_id = '1d000000-0000-0000-0000-000000000001' where codigo = 'BOD';
+update public.estaciones set impresora_id = '1d000000-0000-0000-0000-000000000002' where codigo = 'C01';
+
+-- Una entrada confirmada: 6 rollos de jersey (2 lotes de negro, 1 de gris) + insumos
+insert into public.recepciones (id, proveedor_id, bodega_id, factura_proveedor, fecha)
+values ('1e000000-0000-0000-0000-000000000001', (select id from public.proveedores where nit = '900000001-1'),
+        '1a000000-0000-0000-0000-000000000001', 'FE-EJEMPLO-001', current_date - 5);
+insert into public.recepcion_lineas (recepcion_id, orden, material_id, color_id, cantidad, costo_unitario, lote_tintura, tono, ancho_real_cm, metros, kilos, ubicacion_id)
+select '1e000000-0000-0000-0000-000000000001', n, '1c000000-0000-0000-0000-000000000001', (select id from public.colores where codigo = col),
+       kilos, 32000, lote, tono, ancho, round(kilos * 3.45, 2), kilos, (select id from public.ubicaciones where codigo = ub)
+from (values
+  (1,'N','L-2410-N1','A',180.0,22.4,'UB-BT-A01'), (2,'N','L-2410-N1','A',179.5,21.8,'UB-BT-A01'),
+  (3,'N','L-2410-N1','A',180.5,23.1,'UB-BT-A01'), (4,'N','L-2411-N2','B',177.0,22.0,'UB-BT-A02'),
+  (5,'GJ','L-2412-G1','A',181.0,24.5,'UB-BT-A02'), (6,'GJ','L-2412-G1','A',181.0,23.9,'UB-BT-A02')
+) as v(n, col, lote, tono, ancho, kilos, ub);
+select count(*) from public.confirmar_recepcion('1e000000-0000-0000-0000-000000000001');
+
+insert into public.recepciones (id, proveedor_id, bodega_id, factura_proveedor, fecha)
+values ('1e000000-0000-0000-0000-000000000002', (select id from public.proveedores where nit = '900000002-2'),
+        '1a000000-0000-0000-0000-000000000002', 'FE-EJEMPLO-002', current_date - 3);
+insert into public.recepcion_lineas (recepcion_id, orden, material_id, color_id, cantidad, costo_unitario, ubicacion_id)
+values
+  ('1e000000-0000-0000-0000-000000000002', 1, '1c000000-0000-0000-0000-000000000011', (select id from public.colores where codigo = 'N'), 24, 6500, (select id from public.ubicaciones where codigo = 'UB-BI-01')),
+  ('1e000000-0000-0000-0000-000000000002', 2, '1c000000-0000-0000-0000-000000000011', (select id from public.colores where codigo = 'GJ'), 12, 6500, (select id from public.ubicaciones where codigo = 'UB-BI-01')),
+  ('1e000000-0000-0000-0000-000000000002', 3, '1c000000-0000-0000-0000-000000000012', null, 5000, 180, (select id from public.ubicaciones where codigo = 'UB-BI-02')),
+  ('1e000000-0000-0000-0000-000000000002', 4, '1c000000-0000-0000-0000-000000000014', null, 600, 120, (select id from public.ubicaciones where codigo = 'UB-BI-02'));
+select count(*) from public.confirmar_recepcion('1e000000-0000-0000-0000-000000000002');
