@@ -8,7 +8,7 @@ import 'comun_inventario.dart';
 /// Columnas que necesita una etiqueta de rollo.
 const selectRolloEtiqueta =
     'id, codigo, lote_tintura, tono, ancho_real_cm, metros_saldo, kilos_saldo, metros_iniciales, kilos_iniciales, fecha_ingreso, '
-    'materiales(nombre), colores(nombre), proveedores(nombre), ubicaciones(codigo)';
+    'materiales(nombre, codigo, unidad), colores(nombre, hex), proveedores(nombre), ubicaciones(codigo)';
 
 Map<String, Object?> datosRolloDesdeFila(Map<String, dynamic> r, {bool iniciales = false}) => datosEtiquetaRollo(
       codigo: r['codigo'],

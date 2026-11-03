@@ -7,7 +7,8 @@ Se amplía en cada fase. Lo disponible hoy (Fase 1) está marcado con ✅.
 | **Gerencia** | Panel web | ✅ Ve todos los módulos. ✅ Personal, asistencia del día, usuarios y tablets, eventos rechazados. |
 | **Jefe de producción** | Panel web | ✅ Asistencia del día en vivo. ✅ Lista de personal. Próximo: OP, programación, balanceo. |
 | **Supervisor de módulo (confección)** | Panel web / tablet | ✅ Asistencia de su gente. Próximo: balanceo y tablero de su módulo. |
-| **Bodega** | Panel web / celular | Próximo (Fase 2): rollos, insumos, kardex, conteos y etiquetas. |
+| **Bodega** | Panel web / celular | ✅ Entradas de telas e insumos con etiquetas, rollos, retazos, traslados, kardex, conteos con el celular, solicitar ajustes. |
+| **Costos** | Panel web | ✅ Aprueba o rechaza ajustes de inventario (con motivo). Consulta inventario y kardex. |
 | **Operario** | Tablet | ✅ Marca entrada y salida con el QR del carnet (también sin internet). Próximo (Fase 6): marcar operaciones. |
 | **Satélite** | Panel web (limitado) | Próximo (Fase 6): ver sus remisiones. |
 | Demás roles | Panel web | Ven en el menú sus módulos; se activan en la fase indicada (F2, F3…). |
@@ -27,3 +28,11 @@ Se amplía en cada fase. Lo disponible hoy (Fase 1) está marcado con ✅.
 
 Nunca desinstale la app ni borre sus datos con registros pendientes: se perderían. La opción
 **Desvincular tablet** no deja hacerlo mientras haya pendientes.
+
+## Celular de bodega
+
+- **Consultar rollo:** escanee la etiqueta `TL-…` (o digite `tl12`). Ve saldo, lote, tono, ancho y ubicación.
+  **Trasladar:** toque *Trasladar* y escanee la etiqueta de la ubicación nueva (`UB-…`). **Reimprimir:** escriba el motivo.
+- **Conteo físico:** elija el conteo abierto, escanee la ubicación y luego cada rollo que está en ella. Para insumos toque
+  *Contar insumo* y escriba la cantidad. Funciona sin internet; la oficina ve el avance en vivo.
+- **Impresora:** *Imprimir prueba* para revisar la conexión. Si una etiqueta no sale, queda en la cola y se reintenta sola.

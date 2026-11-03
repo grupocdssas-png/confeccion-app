@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:confeccion/core/escaneo/codigos.dart';
 import 'package:confeccion/core/etiquetas/cola_impresion.dart';
+import 'package:confeccion/core/etiquetas/etiquetas_pdf.dart';
 import 'package:confeccion/core/etiquetas/transporte.dart';
 import 'package:confeccion/core/etiquetas/zpl.dart';
 import 'package:confeccion/core/sync/bandeja.dart';
@@ -75,6 +76,22 @@ void main() {
     });
     test('el QR mide unos 29 mm: 21 módulos × 11 puntos a 203 dpi', () {
       expect(21 * 11 / 203 * 25.4, closeTo(29, 0.5));
+    });
+  });
+
+  group('PDF de etiquetas (web sin Browser Print)', () {
+    TestWidgetsFlutterBinding.ensureInitialized();
+    test('una página de 100 × 50 mm por rollo, con tildes', () async {
+      final datos = datosEtiquetaRollo(codigo: 'TL-000123', tela: 'Algodón peinado', color: 'Ñandú', lote: 'L1', anchoCm: 180,
+          metros: 10, kilos: 3, fechaIngreso: DateTime(2026, 11, 3));
+      final bytes = await EtiquetasPdf.rollos([datos, datos]);
+      final texto = latin1.decode(bytes);
+      expect(texto, startsWith('%PDF'));
+      expect(RegExp(r'/Type\s*/Page\b').allMatches(texto).length, 2);
+      final caja = RegExp(r'/MediaBox\s*\[\s*0\s+0\s+([\d.]+)\s+([\d.]+)').firstMatch(texto);
+      expect(caja, isNotNull, reason: texto.substring(0, 400));
+      expect(double.parse(caja!.group(1)!), closeTo(283.46, 0.1), reason: '100 mm');
+      expect(double.parse(caja.group(2)!), closeTo(141.73, 0.1), reason: '50 mm');
     });
   });
 

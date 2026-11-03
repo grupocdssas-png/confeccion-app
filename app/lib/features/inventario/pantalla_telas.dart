@@ -12,7 +12,7 @@ import 'etiquetas_inventario_web.dart';
 final _rollosProvider = FutureProvider.autoDispose.family<List<Map<String, dynamic>>, (bool, String)>((ref, k) async {
   final (retazos, estado) = k;
   var q = db.from('rollos').select('$selectRolloEtiqueta, material_id, color_id, estado, es_retazo, bodega_id, ubicacion_id, '
-      'colores(nombre, hex), materiales(nombre, codigo, unidad), rollo_origen:rollo_origen_id(codigo)');
+      'rollo_origen:rollo_origen_id(codigo)');
   q = q.eq('es_retazo', retazos);
   if (estado == 'vigentes') q = q.neq('estado', 'agotado');
   if (estado == 'agotados') q = q.eq('estado', 'agotado');
@@ -189,7 +189,7 @@ class _DialogoRolloState extends ConsumerState<DialogoRollo> {
 
   Future<(Map<String, dynamic>, List<Map<String, dynamic>>)> _cargar() async {
     final r = await db.from('rollos').select('$selectRolloEtiqueta, estado, es_retazo, bodega_id, ubicacion_id, bodegas(nombre), '
-        'materiales(nombre, unidad), rollo_origen:rollo_origen_id(codigo)').eq('id', widget.rolloId).single();
+        'rollo_origen:rollo_origen_id(codigo)').eq('id', widget.rolloId).single();
     final k = await db.from('movimientos_inventario').select('tipo, cantidad, metros, kilos, documento_tipo, documento_id, motivo, ocurrido_en, '
         'ubicaciones(codigo)').eq('rollo_id', widget.rolloId).order('ocurrido_en', ascending: true).order('recibido_en', ascending: true);
     return (r, k);

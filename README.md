@@ -7,8 +7,8 @@ materiales, corte, costos e inventarios.
 - **Panel web** (oficina, responsive) y, desde la Fase 8, **tableros de TV**.
 - **Servidor**: Supabase (PostgreSQL, Auth, RLS, Storage, Realtime) + **PowerSync** para la sincronización.
 
-> Estado: **Fase 1 terminada** (acceso, roles, maestros, base local y sincronización con el caso de
-> asistencia). Ver [`docs/fase-1/FASE_1.md`](docs/fase-1/FASE_1.md) y la propuesta aprobada en [`docs/fase-0/`](docs/fase-0/).
+> Estado: **Fase 2 terminada** (inventarios y etiquetas Zebra). Ver [`docs/fase-2/FASE_2.md`](docs/fase-2/FASE_2.md),
+> [`docs/fase-1/FASE_1.md`](docs/fase-1/FASE_1.md) y la propuesta aprobada en [`docs/fase-0/`](docs/fase-0/).
 
 ## Estructura
 
@@ -80,7 +80,9 @@ psql "SU_CADENA_DE_CONEXION" -f supabase/seed.sql
 SUPABASE_URL=https://SU_PROJECT_REF.supabase.co SUPABASE_SERVICE_ROLE_KEY=su_clave_secreta node herramientas/crear_usuarios_demo.mjs
 ```
 
-El script imprime la contraseña de los usuarios de ejemplo.
+El script imprime la contraseña de los usuarios de ejemplo. Crea: `gerencia@ejemplo.co`, `jefe.produccion@ejemplo.co`,
+`bodega@ejemplo.co`, `costos@ejemplo.co` (aprueba ajustes) y las cuentas técnicas `tablet-ent@planta.local`,
+`tablet-mod1@planta.local` y `celular-bodega@planta.local`. Se puede volver a correr sin problema.
 
 ## 3. Configurar PowerSync (nube)
 
@@ -188,6 +190,14 @@ cd app && E2E=1 SUPABASE_ANON_KEY=anon_de_supabase_status SUPABASE_SERVICE_ROLE_
 ```
 
 (`npx supabase status` muestra las claves locales. Copie `sync/sync-rules.yaml` a `sync/local/` si lo cambia.)
+
+## Impresoras Zebra
+
+- **Tablets y celulares:** la Zebra necesita **IP fija** en el wifi de la planta. Regístrela en *Configuración → Impresoras y
+  etiquetas* y asígnela a la estación. La app envía por el puerto 9100 aunque no haya internet.
+- **PC de oficina:** instale **Zebra Browser Print** (gratuito, del sitio de Zebra) con la impresora por USB o red. Si no está,
+  la web genera un PDF al tamaño real (100 × 50 mm).
+- Material: térmico directo para paquetes y juegos; transferencia térmica o sintética para rollos, ubicaciones y máquinas.
 
 ## Formato y convenciones
 

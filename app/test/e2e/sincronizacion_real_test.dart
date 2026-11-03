@@ -80,4 +80,44 @@ void main() {
       await dir.delete(recursive: true);
     }
   }, skip: activo ? false : 'Pruebas e2e: ejecutar con E2E=1 y Supabase + PowerSync locales', timeout: const Timeout(Duration(minutes: 2)));
+
+  test('celular de bodega sin conexión: traslada y cuenta; al conectar baja inventario y sube todo', () async {
+    final dir = await Directory.systemTemp.createTemp('e2e_bod');
+    final db = PowerSyncDatabase(schema: esquemaLocal, path: '${dir.path}/b.db');
+    await db.initialize();
+    final admin = SupabaseClient(_url, _service);
+    final celular = SupabaseClient(_url, _anon);
+    try {
+      await celular.auth.signInWithPassword(email: 'celular-bodega@planta.local', password: _clave);
+      final rollo = await admin.from('rollos').select('id, ubicacion_id').eq('codigo', 'TL-000001').single();
+      final rollo2 = await admin.from('rollos').select('id').eq('codigo', 'TL-000002').single();
+      final destino = await admin.from('ubicaciones').select('id').eq('codigo', 'UB-BT-B01').single();
+      final conteo = await admin.from('conteos_fisicos')
+          .insert({'bodega_id': '1a000000-0000-0000-0000-000000000001', 'alcance': 'telas'}).select('id').single();
+
+      final bandeja = Bandeja(db);
+      await bandeja.registrar(tabla: 'traslados_rollo', datos: {'rollo_id': rollo['id'], 'ubicacion_destino_id': destino['id']}, resumen: {});
+      await bandeja.registrar(tabla: 'conteo_registros', datos: {'conteo_id': conteo['id'], 'rollo_id': rollo2['id']}, resumen: {});
+
+      await db.connect(connector: ConectorSupabase(db, cliente: celular, endpoint: _ps));
+      await esperar(() async => (await db.get("SELECT count(*) n FROM bandeja WHERE estado = 'sincronizado'"))['n'] == 2);
+      await esperar(() async => (await db.get('SELECT count(*) n FROM rollos'))['n'] >= 6);
+      expect((await db.get('SELECT count(*) n FROM ubicaciones'))['n'], greaterThan(3));
+      expect((await db.getAll("SELECT * FROM plantillas_etiqueta WHERE tipo = 'rollo'")).length, 1);
+      expect((await db.getAll('SELECT * FROM impresoras')).length, greaterThanOrEqualTo(1));
+
+      final movido = await admin.from('rollos').select('ubicacion_id').eq('id', rollo['id']).single();
+      expect(movido['ubicacion_id'], destino['id'], reason: 'el traslado hecho sin conexión se aplicó');
+      final regs = await admin.from('conteo_registros').select('id').eq('conteo_id', conteo['id']);
+      expect(regs.length, 1);
+      // la descarga trae la nueva ubicación del rollo
+      await esperar(() async => (await db.get('SELECT ubicacion_id FROM rollos WHERE id = ?', [rollo['id']]))['ubicacion_id'] == destino['id']);
+    } finally {
+      await db.disconnectAndClear();
+      await db.close();
+      await celular.dispose();
+      await admin.dispose();
+      await dir.delete(recursive: true);
+    }
+  }, skip: activo ? false : 'Pruebas e2e: ejecutar con E2E=1 y Supabase + PowerSync locales', timeout: const Timeout(Duration(minutes: 2)));
 }
