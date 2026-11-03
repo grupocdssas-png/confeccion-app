@@ -1,0 +1,5 @@
+{
+  "SUPABASE_URL": "https://SU-PROYECTO.supabase.co",
+  "SUPABASE_ANON_KEY": "clave pública (anon / publishable) del proyecto",
+  "POWERSYNC_URL": "https://SU-INSTANCIA.powersync.journeyapps.com"
+}

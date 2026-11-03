@@ -1,0 +1,28 @@
+# Configuración de sincronización de PowerSync (Sync Streams, edición 3):
+# qué datos baja cada tablet. Se pega en el panel de PowerSync Cloud o se monta
+# en el servicio autoalojado. Solo bajan datos; lo que se crea en la tablet sube
+# por la RPC ingerir_eventos.
+config:
+  edition: 3
+
+streams:
+  # Maestros comunes a todas las tablets (sin datos sensibles: la nómina no baja).
+  maestros_planta:
+    auto_subscribe: true
+    queries:
+      - SELECT clave AS id, CAST(valor AS TEXT) AS valor FROM parametros
+      - SELECT codigo AS id, nombre, color_hex, orden FROM procesos
+      - SELECT id, codigo, nombre, proceso, turno_id, activo FROM celulas
+      - SELECT id, codigo, nombres, apellidos, celula_id, qr, foto_path, activo FROM empleados
+      - SELECT id, nombre, CAST(hora_inicio AS TEXT) AS hora_inicio, CAST(hora_fin AS TEXT) AS hora_fin, cruza_medianoche, activo FROM turnos
+      - SELECT CAST(fecha AS TEXT) AS id, nombre FROM festivos
+      - SELECT id, codigo, orden, activo FROM tallas
+      - SELECT id, codigo, nombre, hex, activo FROM colores
+
+  # Lo propio de cada tablet: su registro de dispositivo y su estación.
+  mi_estacion:
+    auto_subscribe: true
+    queries:
+      - SELECT id, estacion_id, nombre, tipo FROM dispositivos WHERE usuario_id = auth.user_id() AND activo = true
+      - SELECT id, codigo, nombre, tipo, proceso, celula_id, bodega_id FROM estaciones
+        WHERE id IN (SELECT estacion_id FROM dispositivos WHERE usuario_id = auth.user_id() AND activo = true)

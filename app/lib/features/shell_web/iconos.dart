@@ -1,0 +1,31 @@
+import 'package:flutter/material.dart';
+
+/// Ícono por nombre (columna `modulos.icono`).
+IconData iconoModulo(String? nombre) => switch (nombre) {
+      'dashboard' => Icons.space_dashboard_outlined,
+      'receipt' => Icons.receipt_long_outlined,
+      'assignment' => Icons.assignment_outlined,
+      'calendar' => Icons.calendar_month_outlined,
+      'design' => Icons.draw_outlined,
+      'list' => Icons.format_list_numbered,
+      'cut' => Icons.content_cut,
+      'inventory' => Icons.inventory_2_outlined,
+      'cart' => Icons.shopping_cart_outlined,
+      'balance' => Icons.balance_outlined,
+      'speed' => Icons.speed_outlined,
+      'tv' => Icons.tv_outlined,
+      'timer' => Icons.timer_outlined,
+      'local_shipping' => Icons.local_shipping_outlined,
+      'verified' => Icons.verified_outlined,
+      'checkroom' => Icons.checkroom_outlined,
+      'payments' => Icons.payments_outlined,
+      'search' => Icons.manage_search,
+      'bar_chart' => Icons.bar_chart,
+      'build' => Icons.build_outlined,
+      'badge' => Icons.badge_outlined,
+      'people' => Icons.people_outline,
+      'storefront' => Icons.storefront_outlined,
+      'chat' => Icons.chat_bubble_outline,
+      'settings' => Icons.settings_outlined,
+      _ => Icons.circle_outlined,
+    };

@@ -1,0 +1,18 @@
+# Servicio PowerSync AUTOALOJADO solo para pruebas locales con `supabase start`.
+# En producción se usa PowerSync Cloud (ver README).
+replication:
+  connections:
+    - type: postgresql
+      uri: postgresql://postgres:postgres@supabase_db_confeccion:5432/postgres
+      sslmode: disable
+storage:
+  type: postgresql
+  uri: postgresql://postgres:postgres@supabase_db_confeccion:5432/powersync_storage
+  sslmode: disable
+port: 8080
+sync_config:
+  path: /config/sync-rules.yaml
+client_auth:
+  jwks_uri: http://supabase_kong_confeccion:8000/auth/v1/.well-known/jwks.json
+  block_local_jwks: false
+  audience: ['authenticated']

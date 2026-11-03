@@ -1,0 +1,20 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Panel web (Chrome)",
+      "request": "launch",
+      "type": "dart",
+      "program": "lib/main_web.dart",
+      "deviceId": "chrome",
+      "args": ["--dart-define-from-file=config/dev.json"]
+    },
+    {
+      "name": "App de planta (tablet)",
+      "request": "launch",
+      "type": "dart",
+      "program": "lib/main_planta.dart",
+      "args": ["--dart-define-from-file=config/dev.json"]
+    }
+  ]
+}
