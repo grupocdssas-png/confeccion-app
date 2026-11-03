@@ -320,3 +320,18 @@ select public.crear_op(
   current_date + 20, 2, 'OP de EJEMPLO desde el pedido',
   (select jsonb_agg(jsonb_build_object('pedido_linea_id', id, 'cantidad', cantidad)) from public.pedido_lineas where pedido_id = '1f000000-0000-0000-0000-000000000001'),
   current_date + 2, current_date + 25);
+
+-- =====================================================================
+-- Fase 5 · Trazos guardados de EJEMPLO (largos y unidades ficticios)
+-- =====================================================================
+insert into public.trazos (referencia_id, nombre, material_id, partes, tallas, secciones, ancho_cm, observacion)
+select r.id, v.nombre, v.material::uuid, v.partes::text[], v.tallas::jsonb, v.secciones::jsonb, v.ancho, 'Trazo de EJEMPLO: medir el real en la mesa'
+from public.referencias r, (values
+  ('Cuerpo y mangas 1-2-2-1 (EJEMPLO)', '1c000000-0000-0000-0000-000000000001', '{Cuerpo,Mangas}', '["S","M","L","XL"]',
+   '[{"letra":"A","largo_m":5.70,"unidades":{"S":1,"M":2,"L":2,"XL":1}}]', 178.0),
+  ('Cuerpo y mangas por espigas (EJEMPLO)', '1c000000-0000-0000-0000-000000000001', '{Cuerpo,Mangas}', '["S","M","L","XL"]',
+   '[{"letra":"A","largo_m":3.80,"unidades":{"M":2,"L":2}},{"letra":"B","largo_m":0.95,"unidades":{"S":1}},{"letra":"C","largo_m":1.00,"unidades":{"XL":1}}]', 178.0),
+  ('Cuellos rib 4-8-8-4 (EJEMPLO)', '1c000000-0000-0000-0000-000000000003', '{Cuello}', '["S","M","L","XL"]',
+   '[{"letra":"A","largo_m":0.60,"unidades":{"S":4,"M":8,"L":8,"XL":4}}]', 98.0)
+) as v(nombre, material, partes, tallas, secciones, ancho)
+where r.codigo = 'CAM-001';

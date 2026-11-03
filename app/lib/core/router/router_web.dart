@@ -6,6 +6,9 @@ import '../../features/acceso/pantalla_ingreso.dart';
 import '../../features/asistencia/pantalla_asistencia_web.dart';
 import '../../features/configuracion/pantalla_configuracion.dart';
 import '../../features/configuracion/pantalla_etiquetas.dart';
+import '../../features/corte/pantalla_corte.dart';
+import '../../features/corte/pantalla_cortes.dart';
+import '../../features/corte/pantalla_juegos.dart';
 import '../../features/fichas/pantalla_ficha.dart';
 import '../../features/fichas/pantalla_fichas.dart';
 import '../../features/inventario/pantalla_ajustes_conteos.dart';
@@ -65,6 +68,9 @@ final routerWebProvider = Provider<GoRouter>((ref) {
           GoRoute(path: '/op/:id', builder: (_, s) => protegida('/op', PantallaOp(key: ValueKey(s.pathParameters['id']), id: s.pathParameters['id']!))),
           GoRoute(path: '/compras', builder: (_, _) => protegida('/compras', const PantallaCompras())),
           GoRoute(path: '/compras/oc/:id', builder: (_, s) => protegida('/compras', PantallaOc(key: ValueKey(s.pathParameters['id']), id: s.pathParameters['id']!))),
+          GoRoute(path: '/corte', builder: (_, _) => protegida('/corte', const PantallaCortes())),
+          GoRoute(path: '/corte/op/:op', builder: (_, s) => protegida('/corte', PantallaJuegosOp(key: ValueKey(s.pathParameters['op']), opId: s.pathParameters['op']!))),
+          GoRoute(path: '/corte/:id', builder: (_, s) => protegida('/corte', PantallaCorte(key: ValueKey(s.pathParameters['id']), id: s.pathParameters['id']!))),
           GoRoute(path: '/operaciones', builder: (_, _) => protegida('/operaciones', const PantallaOperaciones())),
           GoRoute(path: '/operaciones/importar', builder: (_, _) => protegida('/operaciones', const PantallaImportar())),
           GoRoute(path: '/fichas', builder: (_, _) => protegida('/fichas', const PantallaFichas())),

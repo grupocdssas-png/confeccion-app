@@ -48,3 +48,14 @@ Nunca desinstale la app ni borre sus datos con registros pendientes: se perderí
 3. En el paso 7 la ficha dice qué le falta. Cuando esté completa: **Enviar a aprobación**.
 4. Diseño, Producción y Costos aprueban cada uno su parte. Si alguien rechaza, vuelve a borrador con el motivo.
 5. Una ficha aprobada no se toca: para cambiarla, **Nueva versión**. Las OP que ya la usan conservan la anterior.
+
+## Corte (jefe de corte)
+
+1. *Corte* → en la OP, **Nuevo corte**. Elija tipo (un color, multicolor o prenda combinada), mesa y cortador.
+2. En cada tendido: tela, partes y trazo (normal o por espigas; puede usar un trazo guardado). **Sugerir capas** reparte las
+   capas en los rollos del mismo lote.
+3. Revise en rojo lo que falta y en ámbar lo que sobra, y el consumo contra el estándar.
+4. Si el aviso de lotes aparece, solo el jefe de corte autoriza con un motivo. Paquetes nunca mezclan lote, color ni talla.
+5. **Instrucciones de mesa** para el cortador → **Confirmar corte** → imprima las etiquetas de los paquetes.
+6. *Piezas y juegos*: arme los juegos (prendas combinadas), mire qué falta recortar, imprima las etiquetas y **Terminar corte**.
+

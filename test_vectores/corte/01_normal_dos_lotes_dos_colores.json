@@ -1,0 +1,38 @@
+{
+  "nombre": "Tendido normal, negro en dos lotes y gris, despunte 2 cm",
+  "despunte_cm": 2,
+  "max_paquete": 20,
+  "bloque": {
+    "tallas": ["S", "M", "L", "XL"],
+    "secciones": [{"letra": "A", "largo_m": 2.10, "unidades": {"S": 1, "M": 2, "L": 2, "XL": 1}}],
+    "tramos": [
+      {"rollo_id": "r1", "color_id": "N", "lote": "L1", "espiga": 1, "capas": 12},
+      {"rollo_id": "r2", "color_id": "N", "lote": "L1", "espiga": 1, "capas": 8},
+      {"rollo_id": "r3", "color_id": "N", "lote": "L2", "espiga": 1, "capas": 5},
+      {"rollo_id": "r4", "color_id": "GJ", "lote": "G1", "espiga": 1, "capas": 10}
+    ]
+  },
+  "esperado": {
+    "metros": 74.20,
+    "capas_espiga": [35],
+    "capas_seccion": [35],
+    "piezas": {"N": {"S": 25, "M": 50, "L": 50, "XL": 25}, "GJ": {"S": 10, "M": 20, "L": 20, "XL": 10}},
+    "metros_por_rollo": {"r1": 25.44, "r2": 16.96, "r3": 10.60, "r4": 21.20},
+    "paquetes": [
+      {"color_id": "N", "lote": "L1", "espiga": 1, "talla": "S", "capa_desde": 1, "capa_hasta": 20, "cantidad": 20},
+      {"color_id": "N", "lote": "L1", "espiga": 1, "talla": "M", "capa_desde": 1, "capa_hasta": 10, "cantidad": 20},
+      {"color_id": "N", "lote": "L1", "espiga": 1, "talla": "M", "capa_desde": 11, "capa_hasta": 20, "cantidad": 20},
+      {"color_id": "N", "lote": "L1", "espiga": 1, "talla": "L", "capa_desde": 1, "capa_hasta": 10, "cantidad": 20},
+      {"color_id": "N", "lote": "L1", "espiga": 1, "talla": "L", "capa_desde": 11, "capa_hasta": 20, "cantidad": 20},
+      {"color_id": "N", "lote": "L1", "espiga": 1, "talla": "XL", "capa_desde": 1, "capa_hasta": 20, "cantidad": 20},
+      {"color_id": "N", "lote": "L2", "espiga": 1, "talla": "S", "capa_desde": 21, "capa_hasta": 25, "cantidad": 5},
+      {"color_id": "N", "lote": "L2", "espiga": 1, "talla": "M", "capa_desde": 21, "capa_hasta": 25, "cantidad": 10},
+      {"color_id": "N", "lote": "L2", "espiga": 1, "talla": "L", "capa_desde": 21, "capa_hasta": 25, "cantidad": 10},
+      {"color_id": "N", "lote": "L2", "espiga": 1, "talla": "XL", "capa_desde": 21, "capa_hasta": 25, "cantidad": 5},
+      {"color_id": "GJ", "lote": "G1", "espiga": 1, "talla": "S", "capa_desde": 26, "capa_hasta": 35, "cantidad": 10},
+      {"color_id": "GJ", "lote": "G1", "espiga": 1, "talla": "M", "capa_desde": 26, "capa_hasta": 35, "cantidad": 20},
+      {"color_id": "GJ", "lote": "G1", "espiga": 1, "talla": "L", "capa_desde": 26, "capa_hasta": 35, "cantidad": 20},
+      {"color_id": "GJ", "lote": "G1", "espiga": 1, "talla": "XL", "capa_desde": 26, "capa_hasta": 35, "cantidad": 10}
+    ]
+  }
+}

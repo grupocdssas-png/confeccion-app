@@ -79,4 +79,64 @@ class EtiquetasPdf {
     }
     return doc.save();
   }
+
+  static const _formatoChico = PdfPageFormat(50 * PdfPageFormat.mm, 30 * PdfPageFormat.mm);
+
+  static pw.Widget _chica({required String codigo, required String linea1, required String grande, required List<String> lineas, required String pie}) =>
+      pw.Column(crossAxisAlignment: pw.CrossAxisAlignment.start, children: [
+        pw.Expanded(
+          child: pw.Row(crossAxisAlignment: pw.CrossAxisAlignment.start, children: [
+            _qr(codigo, 15),
+            pw.SizedBox(width: 2 * PdfPageFormat.mm),
+            pw.Expanded(
+              child: pw.Column(crossAxisAlignment: pw.CrossAxisAlignment.start, children: [
+                pw.Text(codigo, style: pw.TextStyle(fontSize: 8, fontWeight: pw.FontWeight.bold)),
+                pw.Text(linea1, style: const pw.TextStyle(fontSize: 6), maxLines: 1),
+                pw.Text(grande, style: pw.TextStyle(fontSize: 11, fontWeight: pw.FontWeight.bold)),
+                for (final l in lineas) pw.Text(l, style: const pw.TextStyle(fontSize: 6), maxLines: 1),
+              ]),
+            ),
+          ]),
+        ),
+        pw.Divider(height: 2, thickness: 0.4),
+        pw.Text(pie, style: const pw.TextStyle(fontSize: 5.5), maxLines: 2),
+      ]);
+
+  /// [paquetes]: mapas de datosEtiquetaPaquete() (50 × 30 mm).
+  static Future<List<int>> paquetes(List<Map<String, Object?>> paquetes) async {
+    final doc = pw.Document(theme: await _cargarTema(), title: 'Etiquetas de paquete');
+    for (final p in paquetes) {
+      doc.addPage(pw.Page(
+        pageFormat: _formatoChico,
+        margin: const pw.EdgeInsets.all(1.5 * PdfPageFormat.mm),
+        build: (_) => _chica(
+          codigo: '${p['codigo']}',
+          linea1: '${p['op']}  ${p['referencia']}',
+          grande: 'T: ${p['talla']}  x${p['cantidad']}',
+          lineas: ['${p['color']}', 'Lote ${p['lote']}'],
+          pie: '${p['partes']}  Capas ${p['capas']}  ·  Corte ${p['corte']} ${p['fecha']}',
+        ),
+      ));
+    }
+    return doc.save();
+  }
+
+  /// [juegos]: mapas de datosEtiquetaJuego() (50 × 30 mm).
+  static Future<List<int>> juegos(List<Map<String, Object?>> juegos) async {
+    final doc = pw.Document(theme: await _cargarTema(), title: 'Etiquetas de juego');
+    for (final j in juegos) {
+      doc.addPage(pw.Page(
+        pageFormat: _formatoChico,
+        margin: const pw.EdgeInsets.all(1.5 * PdfPageFormat.mm),
+        build: (_) => _chica(
+          codigo: '${j['codigo']}',
+          linea1: '${j['op']}  ${j['referencia']}',
+          grande: 'T: ${j['talla']}  x${j['cantidad']}',
+          lineas: ['${j['combinacion']}'],
+          pie: '${j['paquetes']}',
+        ),
+      ));
+    }
+    return doc.save();
+  }
 }

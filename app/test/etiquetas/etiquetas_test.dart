@@ -95,6 +95,41 @@ void main() {
     });
   });
 
+  group('Etiquetas de corte (50 × 30 mm)', () {
+    TestWidgetsFlutterBinding.ensureInitialized();
+    final paquete = datosEtiquetaPaquete(
+        codigo: 'PQ-C01-000007', op: 'OP-000001', referencia: 'CAM-001', talla: 'M', cantidad: 20, color: 'Gris jaspe',
+        lote: 'L-2412-G1', partes: 'Cuerpo + Mangas', capaDesde: 11, capaHasta: 20, espiga: 2, corte: 'CRT-000001', fecha: DateTime(2026, 11, 6));
+    test('ZPL del paquete: 400 × 240 puntos, QR con el código, capas y espiga', () {
+      final zpl = renderizarZpl(plantillaPaquetePorDefecto, paquete);
+      expect(zpl, contains('^PW400'));
+      expect(zpl, contains('^LL240'));
+      expect(zpl, contains('^FDMA,PQ-C01-000007^FS'));
+      expect(zpl, contains('T: M  x20'));
+      expect(zpl, contains('Capas 11-20 E2'));
+      expect(zpl, contains('^CI28'));
+    });
+    test('ZPL del juego con sus paquetes', () {
+      final zpl = renderizarZpl(plantillaJuegoPorDefecto, datosEtiquetaJuego(
+          codigo: 'JG-000001', op: 'OP-000001', referencia: 'CAM-001', talla: 'S', cantidad: 20, combinacion: 'GJ · Gris jaspe con cuello negro',
+          paquetes: ['C01-000001', 'C01-000011']));
+      expect(zpl, contains('^FDMA,JG-000001^FS'));
+      expect(zpl, contains('C01-000001 C01-000011'));
+    });
+    test('PDF de 50 × 30 mm por paquete y por juego', () async {
+      for (final bytes in [
+        await EtiquetasPdf.paquetes([paquete, paquete, paquete]),
+        await EtiquetasPdf.juegos([datosEtiquetaJuego(codigo: 'JG-1', op: 'OP', referencia: 'R', talla: 'S', cantidad: 1, combinacion: 'N', paquetes: ['a'])]),
+      ]) {
+        final texto = latin1.decode(bytes);
+        final caja = RegExp(r'/MediaBox\s*\[\s*0\s+0\s+([\d.]+)\s+([\d.]+)').firstMatch(texto)!;
+        expect(double.parse(caja.group(1)!), closeTo(141.73, 0.1), reason: '50 mm');
+        expect(double.parse(caja.group(2)!), closeTo(85.04, 0.1), reason: '30 mm');
+      }
+      expect(RegExp(r'/Type\s*/Page\b').allMatches(latin1.decode(await EtiquetasPdf.paquetes([paquete, paquete, paquete]))).length, 3);
+    });
+  });
+
   group('Envío TCP al puerto de la impresora', () {
     test('llega el ZPL completo', () async {
       final zebra = ZebraSimulada();

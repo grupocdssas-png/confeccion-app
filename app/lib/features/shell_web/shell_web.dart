@@ -10,7 +10,7 @@ import 'iconos.dart';
 
 /// Fase que está implementada hasta ahora (los módulos de fases posteriores se
 /// muestran en el menú pero atenuados).
-const faseActual = 4;
+const faseActual = 5;
 
 /// Estructura del panel web: menú lateral oscuro (fijo en pantallas anchas,
 /// desplegable en celular) + contenido.

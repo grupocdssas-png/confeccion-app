@@ -44,6 +44,56 @@ Map<String, Object?> datosEtiquetaRollo({
 Map<String, Object?> datosEtiquetaUbicacion({required String codigo, required String bodega, String? descripcion}) =>
     {'codigo': codigo, 'bodega': bodega, 'descripcion': descripcion ?? ''};
 
+/// Datos de la etiqueta de paquete de corte (50 × 30 mm).
+Map<String, Object?> datosEtiquetaPaquete({
+  required String codigo,
+  required String op,
+  required String referencia,
+  required String talla,
+  required int cantidad,
+  required String color,
+  required String lote,
+  required String partes,
+  required int capaDesde,
+  required int capaHasta,
+  int espiga = 1,
+  required String corte,
+  required DateTime fecha,
+}) =>
+    {
+      'codigo': codigo,
+      'op': op,
+      'referencia': referencia,
+      'talla': talla,
+      'cantidad': cantidad,
+      'color': color,
+      'lote': lote,
+      'partes': partes,
+      'capas': capaDesde == capaHasta ? '$capaDesde' : '$capaDesde-$capaHasta${espiga > 1 ? ' E$espiga' : ''}',
+      'corte': corte,
+      'fecha': '${fecha.day.toString().padLeft(2, '0')}/${fecha.month.toString().padLeft(2, '0')}',
+    };
+
+/// Datos de la etiqueta de juego (prenda combinada, 50 × 30 mm).
+Map<String, Object?> datosEtiquetaJuego({
+  required String codigo,
+  required String op,
+  required String referencia,
+  required String talla,
+  required int cantidad,
+  required String combinacion,
+  required List<String> paquetes,
+}) =>
+    {
+      'codigo': codigo,
+      'op': op,
+      'referencia': referencia,
+      'talla': talla,
+      'cantidad': cantidad,
+      'combinacion': combinacion,
+      'paquetes': paquetes.join(' '),
+    };
+
 /// Plantillas por defecto (las mismas de la migración 7) para pruebas y vista previa
 /// cuando aún no se ha descargado la configuración.
 const plantillaRolloPorDefecto = '''^XA
@@ -87,3 +137,36 @@ String zplPrueba(String nombreImpresora) => renderizarZpl('''^XA
 ^FO240,180^A0N,30,30^FDÁÉÍÓÚ Ñ ñ · {{hora}}^FS
 ^FO20,330^GB760,4,4^FS
 ^XZ''', {'impresora': nombreImpresora, 'hora': Formato.fechaHora(DateTime.now())});
+
+/// Plantillas de corte por defecto (las mismas de la migración 11).
+const plantillaPaquetePorDefecto = '''^XA
+^CI28
+^PW400
+^LL240
+^LH0,0
+^FO10,14^BQN,2,5^FDMA,{{codigo}}^FS
+^FO150,14^A0N,30,30^FD{{codigo}}^FS
+^FO150,50^A0N,24,24^FD{{op}}  {{referencia}}^FS
+^FO150,80^A0N,40,40^FDT: {{talla}}  x{{cantidad}}^FS
+^FO150,126^A0N,22,22^FB240,1,0,L^FD{{color}}^FS
+^FO150,152^A0N,20,20^FB240,1,0,L^FDLote {{lote}}^FS
+^FO10,186^GB380,2,2^FS
+^FO10,196^A0N,20,20^FB380,1,0,L^FD{{partes}}  Capas {{capas}}^FS
+^FO10,218^A0N,18,18^FDCorte {{corte}}  {{fecha}}^FS
+^PQ{{copias}}
+^XZ''';
+
+const plantillaJuegoPorDefecto = '''^XA
+^CI28
+^PW400
+^LL240
+^LH0,0
+^FO10,14^BQN,2,5^FDMA,{{codigo}}^FS
+^FO150,14^A0N,30,30^FD{{codigo}}^FS
+^FO150,50^A0N,24,24^FD{{op}}  {{referencia}}^FS
+^FO150,80^A0N,40,40^FDT: {{talla}}  x{{cantidad}}^FS
+^FO150,126^A0N,22,22^FB240,2,0,L^FD{{combinacion}}^FS
+^FO10,186^GB380,2,2^FS
+^FO10,196^A0N,18,18^FB380,2,0,L^FD{{paquetes}}^FS
+^PQ{{copias}}
+^XZ''';

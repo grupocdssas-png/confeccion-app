@@ -7,7 +7,8 @@ materiales, corte, costos e inventarios.
 - **Panel web** (oficina, responsive) y, desde la Fase 8, **tableros de TV**.
 - **Servidor**: Supabase (PostgreSQL, Auth, RLS, Storage, Realtime) + **PowerSync** para la sincronización.
 
-> Estado: **Fase 4 terminada** (pedidos, OP con reservas, requisiciones y compras). Ver [`docs/fase-4/FASE_4.md`](docs/fase-4/FASE_4.md),
+> Estado: **Fase 5 terminada** (corte: tendidos normales y por espigas, paquetes, juegos). Ver [`docs/fase-5/FASE_5.md`](docs/fase-5/FASE_5.md),
+> [`docs/fase-4/FASE_4.md`](docs/fase-4/FASE_4.md),
 > [`docs/fase-3/FASE_3.md`](docs/fase-3/FASE_3.md),
 > [`docs/fase-2/FASE_2.md`](docs/fase-2/FASE_2.md),
 > [`docs/fase-1/FASE_1.md`](docs/fase-1/FASE_1.md) y la propuesta aprobada en [`docs/fase-0/`](docs/fase-0/).
@@ -157,7 +158,7 @@ abriendo aunque se caiga internet.
 
 ## 8. Pruebas
 
-Pruebas de la app (formato colombiano y sincronización sin conexión sobre SQLite real):
+Pruebas de la app (formato colombiano, sincronización sin conexión sobre SQLite real y cálculo de corte con los casos de `test_vectores/`):
 
 ```bash
 cd app && flutter test

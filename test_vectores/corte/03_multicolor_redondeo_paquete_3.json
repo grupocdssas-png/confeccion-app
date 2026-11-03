@@ -1,0 +1,26 @@
+{
+  "nombre": "Multicolor en un tendido, 3 piezas por capa (paquetes de 6 capas) y redondeo de metros",
+  "despunte_cm": 0.5,
+  "max_paquete": 20,
+  "bloque": {
+    "tallas": ["M"],
+    "secciones": [{"letra": "A", "largo_m": 1.333, "unidades": {"M": 3}}],
+    "tramos": [
+      {"rollo_id": "r1", "color_id": "B", "lote": "X", "espiga": 1, "capas": 14},
+      {"rollo_id": "r2", "color_id": "RJ", "lote": "Y", "espiga": 1, "capas": 3}
+    ]
+  },
+  "esperado": {
+    "metros": 22.74,
+    "capas_espiga": [17],
+    "capas_seccion": [17],
+    "piezas": {"B": {"M": 42}, "RJ": {"M": 9}},
+    "metros_por_rollo": {"r1": 18.73, "r2": 4.01},
+    "paquetes": [
+      {"color_id": "B", "lote": "X", "espiga": 1, "talla": "M", "capa_desde": 1, "capa_hasta": 6, "cantidad": 18},
+      {"color_id": "B", "lote": "X", "espiga": 1, "talla": "M", "capa_desde": 7, "capa_hasta": 12, "cantidad": 18},
+      {"color_id": "B", "lote": "X", "espiga": 1, "talla": "M", "capa_desde": 13, "capa_hasta": 14, "cantidad": 6},
+      {"color_id": "RJ", "lote": "Y", "espiga": 1, "talla": "M", "capa_desde": 15, "capa_hasta": 17, "cantidad": 9}
+    ]
+  }
+}
