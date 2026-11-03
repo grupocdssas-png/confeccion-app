@@ -5,10 +5,11 @@ Se amplía en cada fase. Lo disponible hoy (Fase 1) está marcado con ✅.
 | Rol | Dónde trabaja | Qué puede hacer hoy |
 |---|---|---|
 | **Gerencia** | Panel web | ✅ Ve todos los módulos. ✅ Personal, asistencia del día, usuarios y tablets, eventos rechazados. |
-| **Jefe de producción** | Panel web | ✅ Asistencia del día en vivo. ✅ Lista de personal. Próximo: OP, programación, balanceo. |
+| **Jefe de producción** | Panel web | ✅ Asistencia del día en vivo. ✅ Lista de personal. ✅ Aprueba fichas técnicas por Producción y ajusta la lista de operaciones. Próximo: OP, programación, balanceo. |
 | **Supervisor de módulo (confección)** | Panel web / tablet | ✅ Asistencia de su gente. Próximo: balanceo y tablero de su módulo. |
 | **Bodega** | Panel web / celular | ✅ Entradas de telas e insumos con etiquetas, rollos, retazos, traslados, kardex, conteos con el celular, solicitar ajustes. |
-| **Costos** | Panel web | ✅ Aprueba o rechaza ajustes de inventario (con motivo). Consulta inventario y kardex. |
+| **Costos** | Panel web | ✅ Aprueba o rechaza ajustes de inventario (con motivo). Consulta inventario y kardex. ✅ Valor minuto e indirectos. ✅ Aprueba fichas técnicas por Costos. |
+| **Diseño** | Panel web | ✅ Lista maestra de operaciones e importación desde SAMMU. ✅ Fichas técnicas: crea, edita versiones en borrador, envía a aprobación y aprueba por Diseño. |
 | **Operario** | Tablet | ✅ Marca entrada y salida con el QR del carnet (también sin internet). Próximo (Fase 6): marcar operaciones. |
 | **Satélite** | Panel web (limitado) | Próximo (Fase 6): ver sus remisiones. |
 | Demás roles | Panel web | Ven en el menú sus módulos; se activan en la fase indicada (F2, F3…). |
@@ -36,3 +37,11 @@ Nunca desinstale la app ni borre sus datos con registros pendientes: se perderí
 - **Conteo físico:** elija el conteo abierto, escanee la ubicación y luego cada rollo que está en ella. Para insumos toque
   *Contar insumo* y escriba la cantidad. Funciona sin internet; la oficina ve el avance en vivo.
 - **Impresora:** *Imprimir prueba* para revisar la conexión. Si una etiqueta no sale, queda en la cola y se reintenta sola.
+
+## Ficha técnica (Diseño)
+
+1. *Fichas técnicas → Nueva referencia*: crea la versión 1 en borrador.
+2. Complete los 7 pasos. Todo se guarda solo al salir de cada campo.
+3. En el paso 7 la ficha dice qué le falta. Cuando esté completa: **Enviar a aprobación**.
+4. Diseño, Producción y Costos aprueban cada uno su parte. Si alguien rechaza, vuelve a borrador con el motivo.
+5. Una ficha aprobada no se toca: para cambiarla, **Nueva versión**. Las OP que ya la usan conservan la anterior.

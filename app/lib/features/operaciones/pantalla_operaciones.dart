@@ -92,7 +92,7 @@ class _PantallaOperacionesState extends ConsumerState<PantallaOperaciones> {
                       if (o['agrega_minutos_sam'] == false) const Padding(padding: EdgeInsets.only(left: 6), child: Pastilla('No suma SAM', color: Colores.textoSuave)),
                     ])),
                     DataCell(Text([o['familias_producto']?['nombre'], o['tipos_producto']?['nombre']].whereType<String>().join(' · '), style: estilo(12.5))),
-                    DataCell(Pastilla('${o['proceso']}', color: Colores.deProceso(o['proceso']))),
+                    DataCell(Pastilla(Colores.nombreProceso(o['proceso']), color: Colores.deProceso(o['proceso']))),
                     DataCell(Text(Formato.numero(o['sam'], decimales: 3), style: const TextStyle(fontWeight: FontWeight.w600))),
                     DataCell(Text(Formato.numero(o['unidades_hora'], decimales: 1))),
                     DataCell(Text(Formato.cop(o['valor_destajo']))),

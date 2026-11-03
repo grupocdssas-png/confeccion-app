@@ -7,7 +7,7 @@ import '../inventario/comun_inventario.dart' show db, avisar, mensajeError;
 /// Toda la ficha (una versión) con sus detalles, en una sola consulta.
 final fichaProvider = FutureProvider.autoDispose.family<Map<String, dynamic>, String>((ref, id) => db
     .from('ficha_versiones')
-    .select('*, referencias(*, familias_producto(nombre), tipos_producto(nombre)), curvas(nombre), '
+    .select('*, referencias!ficha_versiones_referencia_id_fkey(*, familias_producto(nombre), tipos_producto(nombre)), curvas(nombre), '
         'ficha_tallas(talla_id, orden, tallas(codigo, orden)), '
         'ficha_partes(*), '
         'ficha_combinaciones(*, ficha_combinacion_partes(*)), '

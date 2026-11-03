@@ -73,7 +73,7 @@ class _MenuLateral extends ConsumerWidget {
                 padding: const EdgeInsets.fromLTRB(10, 14, 10, 6),
                 child: Text(g.toUpperCase(), style: estilo(11, peso: FontWeight.w600, color: Colores.menuTexto.withValues(alpha: 0.6))),
               ),
-              for (final p in grupos[g]!) _ItemMenu(permiso: p, activo: p.ruta == '/' ? rutaActual == '/' : rutaActual.startsWith(p.ruta)),
+              for (final p in grupos[g]!) _ItemMenu(permiso: p, activo: rutaActual == p.ruta || (p.ruta != '/' && rutaActual.startsWith('${p.ruta}/'))),
             ],
           ]),
         ),

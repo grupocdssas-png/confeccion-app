@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../compartido/widgets.dart';
+import '../../core/auth/sesion.dart';
 import '../../core/formato/formato.dart';
 import '../../core/importacion/lector_tablas.dart';
 import '../../core/tema/colores.dart';
@@ -83,6 +84,9 @@ class _PantallaImportarState extends ConsumerState<PantallaImportar> {
   Widget build(BuildContext context) {
     final campos = camposImportacion[_tipo]!;
     final t = _tabla;
+    final sesion = ref.watch(sesionProvider).value;
+    final modulo = const {'operaciones': 'operaciones', 'empleados': 'personal', 'maquinas': 'mantenimiento'}[_tipo] ?? 'configuracion';
+    final puede = sesion?.puedeEditar(modulo) ?? false;
     return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
       EncabezadoPagina('Importar desde SAMMU', subtitulo: 'Excel (.xlsx) o CSV exportado de SAMMU. Lo que ya existe con el mismo código se actualiza.',
           acciones: [OutlinedButton(onPressed: () => context.go('/operaciones'), child: const Text('Volver'))]),
@@ -99,7 +103,8 @@ class _PantallaImportarState extends ConsumerState<PantallaImportar> {
               _resultado = null;
             }),
           ),
-          FilledButton.icon(onPressed: _elegir, icon: const Icon(Icons.upload_file), label: Text(_archivo ?? 'Elegir archivo')),
+          FilledButton.icon(onPressed: puede ? _elegir : null, icon: const Icon(Icons.upload_file), label: Text(_archivo ?? 'Elegir archivo')),
+          if (!puede) Text('Su rol no puede importar ${_tipos[_tipo]!.toLowerCase()}.', style: estilo(13, color: Colores.rojo)),
           if (t != null) Text('${t.filas.length - 1} filas${t.decimalComa ? ' · números con coma decimal' : ''}', style: estilo(13, color: Colores.textoSuave)),
           Text(_tipo == 'empleados' ? 'Importe primero las células: los empleados se asignan a su célula por código.'
               : _tipo == 'operaciones' ? 'Las máquinas se reconocen por el código o nombre del tipo de máquina (ej. FIL o Fileteadora).' : '',

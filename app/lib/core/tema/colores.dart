@@ -34,6 +34,12 @@ abstract final class Colores {
 
   static Color deProceso(String? codigo) => proceso[codigo] ?? textoSuave;
 
+  /// Nombre para mostrar de un proceso a partir de su código.
+  static String nombreProceso(String? codigo) => const {
+        'diseno': 'Diseño', 'corte': 'Corte', 'estampacion': 'Estampación', 'bordado': 'Bordado', 'tejidos': 'Tejidos',
+        'confeccion': 'Confección', 'terminacion': 'Terminación', 'calidad': 'Calidad',
+      }[codigo] ?? codigo ?? '';
+
   /// Semáforo por eficiencia (%): ≥ meta verde, ≥ 85 % de la meta ámbar, resto rojo.
   static Color semaforo(double valor, {double meta = 100}) {
     if (valor >= meta) return verde;

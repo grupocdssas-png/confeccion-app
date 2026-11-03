@@ -92,7 +92,7 @@ create table public.operaciones_historial (
   valor_nuevo    numeric(14,2) not null,
   origen         text not null default 'manual' check (origen in ('manual','estudio','importacion','creacion')),
   estudio_id     uuid,
-  usuario_id     uuid default auth.uid(),
+  usuario_id     uuid default auth.uid() references public.perfiles(id),
   fecha          timestamptz not null default now()
 );
 create index on public.operaciones_historial (operacion_id, fecha);
@@ -491,7 +491,7 @@ begin
   returning id into v_nueva;
 
   create temp table if not exists _mapa (viejo uuid primary key, nuevo uuid) on commit drop;
-  delete from _mapa;
+  delete from _mapa where true;   -- (Supabase exige WHERE en los DELETE)
   insert into _mapa select id, gen_random_uuid() from ficha_partes where ficha_id = p_origen;
   insert into _mapa select id, gen_random_uuid() from ficha_combinaciones where ficha_id = p_origen;
   insert into _mapa select id, gen_random_uuid() from ficha_medidas where ficha_id = p_origen;

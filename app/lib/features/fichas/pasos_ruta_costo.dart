@@ -51,7 +51,7 @@ class PasoRuta extends ConsumerWidget {
                   ),
                   Expanded(child: Text('${p['nombre']}', style: estilo(14, peso: FontWeight.w600, color: Colores.deProceso(p['codigo'])))),
                   if (ruta.containsKey(p['codigo']))
-                    CampoGuardable(ancho: 52, etiqueta: 'Orden', numerico: true, habilitado: editable, valor: '${ruta[p['codigo']]!['orden']}',
+                    CampoGuardable(ancho: 66, etiqueta: 'Orden', numerico: true, habilitado: editable, valor: '${ruta[p['codigo']]!['orden']}',
                         onGuardar: (v) => setRuta(p['codigo'], {'orden': int.tryParse(v) ?? 0})),
                 ]),
                 if (ruta.containsKey(p['codigo'])) ...[
@@ -104,7 +104,7 @@ class PasoRuta extends ConsumerWidget {
                       Tooltip(message: 'En la lista maestra el SAM es ${o['operaciones']?['sam']}: se actualiza al enviar a aprobación',
                           child: const Padding(padding: EdgeInsets.only(left: 6), child: Icon(Icons.info_outline, size: 16, color: Colores.ambar))),
                   ])),
-                  DataCell(Pastilla('${o['proceso']}', color: Colores.deProceso(o['proceso']))),
+                  DataCell(Pastilla(Colores.nombreProceso(o['proceso']), color: Colores.deProceso(o['proceso']))),
                   DataCell(SizedBox(width: 120, child: DropdownButtonFormField<String?>(
                     initialValue: o['parte_id'], isDense: true, isExpanded: true, decoration: const InputDecoration(isDense: true),
                     items: [const DropdownMenuItem(value: null, child: Text('—')), for (final p in partes) DropdownMenuItem(value: p['id'] as String, child: Text('${p['nombre']}'))],
@@ -224,7 +224,7 @@ class _PasoCostoState extends ConsumerState<PasoCosto> {
       for (final x in filas) {
         final c = porComb.putIfAbsent(x['combinacion_id'], () => {'combinacion_id': x['combinacion_id']});
         c[x['concepto']] = x['valor'];
-        if (x['concepto'] == 'materiales') c['detalle'] = {'materiales': x['detalle']};
+        if (x['concepto'] == 'materiales') c['detalle'] = x['detalle']; // incluye materiales, SAM y valor minuto
       }
       return (porComb.values.toList(), faltan);
     }
