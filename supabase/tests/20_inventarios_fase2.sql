@@ -38,6 +38,9 @@ create temp table ids as select
   '1a000000-0000-0000-0000-000000000002'::uuid as bi;
 grant select on ids to authenticated;
 
+-- La OP de ejemplo (Fase 4) reserva material: se anula para probar el inventario desde cero
+select anular_op((select id from ordenes_produccion where consecutivo = 'OP-000001'), 'Pruebas de inventario');
+
 -- ---------- Entrada de ejemplo ----------
 select pg_temp.ok((select count(*) from rollos) = 6 and (select min(codigo) from rollos) = 'TL-000001', 'La entrada crea 6 rollos con código TL consecutivo');
 select pg_temp.ok((select metros_saldo = metros_iniciales and kilos_saldo = kilos_iniciales from rollos where codigo = 'TL-000001'), 'Saldo del rollo = lo recibido');
@@ -62,7 +65,7 @@ select pg_temp.ok((select fisico from saldos_por_material s, ids where s.materia
 -- Regla 4: disponible = físico − reservado
 insert into movimientos_inventario (tipo, afecta, material_id, color_id, bodega_id, ubicacion_id, cantidad, documento_tipo)
 select 'reserva', 'reservado', hilo, negro, bi, bi01, 10, 'prueba' from ids;
-select pg_temp.ok((select fisico = 24 and reservado = 10 and disponible = 14 from saldos_inventario s, ids
+select pg_temp.ok((select fisico = 24 and reservado = 10 and disponible = 14 from saldos_por_material s, ids
                    where s.material_id = ids.hilo and s.color_id = ids.negro), 'Disponible = físico − reservado (24 − 10 = 14)');
 
 -- Regla 1: ninguna salida sin OP ni ajuste aprobado (ni siquiera el dueño de la base)
@@ -89,12 +92,12 @@ select enviar_ajuste('a1000000-0000-0000-0000-000000000001');
 select pg_temp.falla($$update ajuste_lineas set cantidad = -20 where ajuste_id = 'a1000000-0000-0000-0000-000000000001'$$, 'Cambiar líneas de un ajuste enviado');
 select pg_temp.falla($$update ajustes_inventario set estado = 'aprobado' where id = 'a1000000-0000-0000-0000-000000000001'$$, 'Aprobar con un UPDATE directo');
 select pg_temp.falla($$select decidir_ajuste('a1000000-0000-0000-0000-000000000001', true)$$, 'Bodega aprobando su propio ajuste');
-select pg_temp.ok((select fisico from saldos_inventario s, ids where s.material_id = ids.hilo and s.color_id = ids.negro) = 24, 'Sin aprobar, el stock no cambia');
+select pg_temp.ok((select fisico from saldos_por_material s, ids where s.material_id = ids.hilo and s.color_id = ids.negro) = 24, 'Sin aprobar, el stock no cambia');
 
 set request.jwt.claim.sub = 'aaaaaaaa-0000-0000-0000-000000000008';  -- costos
 select pg_temp.falla($$select decidir_ajuste('a1000000-0000-0000-0000-000000000001', false)$$, 'Rechazar sin escribir el motivo');
 select decidir_ajuste('a1000000-0000-0000-0000-000000000001', true, 'Verificado');
-select pg_temp.ok((select fisico from saldos_inventario s, ids where s.material_id = ids.hilo and s.color_id = ids.negro) = 22, 'Ajuste aprobado: 24 − 2 = 22 conos');
+select pg_temp.ok((select fisico from saldos_por_material s, ids where s.material_id = ids.hilo and s.color_id = ids.negro) = 22, 'Ajuste aprobado: 24 − 2 = 22 conos');
 select pg_temp.ok((select tipo = 'ajuste' and ajuste_id is not null from movimientos_inventario where documento_id = (select consecutivo from ajustes_inventario where id = 'a1000000-0000-0000-0000-000000000001')),
                   'El movimiento queda ligado al ajuste aprobado');
 -- quien solicita no aprueba
@@ -105,7 +108,7 @@ select enviar_ajuste('a1000000-0000-0000-0000-000000000002');
 select pg_temp.falla($$select decidir_ajuste('a1000000-0000-0000-0000-000000000002', true)$$, 'Aprobar un ajuste que uno mismo solicitó');
 set request.jwt.claim.sub = 'aaaaaaaa-0000-0000-0000-000000000001';  -- gerencia
 select decidir_ajuste('a1000000-0000-0000-0000-000000000002', true, 'Prueba de saldo negativo');
-select pg_temp.ok((select fisico from saldos_inventario s, ids where s.material_id = ids.hilo and s.color_id = ids.negro) = -978,
+select pg_temp.ok((select fisico from saldos_por_material s, ids where s.material_id = ids.hilo and s.color_id = ids.negro) = -978,
                   'Saldo negativo: se aplica igual');
 reset role;
 select pg_temp.ok(exists (select 1 from alertas where tipo = 'stock_negativo' and estado = 'abierta'), 'y se crea alerta para bodega');

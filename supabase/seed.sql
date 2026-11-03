@@ -301,3 +301,22 @@ begin
   perform public.decidir_ficha(v_ficha, 'produccion', true, 'EJEMPLO');
   perform public.decidir_ficha(v_ficha, 'costos', true, 'EJEMPLO');
 end $$;
+
+-- =====================================================================
+-- Fase 4 · Pedido y OP de EJEMPLO
+-- =====================================================================
+insert into public.pedidos (id, cliente_id, canal_id, fecha_comprometida, observacion)
+select '1f000000-0000-0000-0000-000000000001', c.id, c.canal_id, current_date + 25, 'Pedido de EJEMPLO'
+from public.clientes c where c.nit = '800000001-1';
+insert into public.pedido_lineas (pedido_id, referencia_id, combinacion_codigo, talla_id, cantidad)
+select '1f000000-0000-0000-0000-000000000001', r.id, v.comb, t.id, v.n
+from (values ('N','S',20),('N','M',40),('N','L',40),('N','XL',20),('GJ','S',10),('GJ','M',20),('GJ','L',20),('GJ','XL',10)) v(comb, talla, n)
+join public.referencias r on r.codigo = 'CAM-001' join public.tallas t on t.codigo = v.talla;
+
+-- OP desde el pedido: reserva lo que hay y pide lo que falta (el rib no tiene existencias)
+select public.crear_op(
+  (select id from public.referencias where codigo = 'CAM-001'),
+  '{"N": {"S": 20, "M": 40, "L": 40, "XL": 20}, "GJ": {"S": 10, "M": 20, "L": 20, "XL": 10}}'::jsonb,
+  current_date + 20, 2, 'OP de EJEMPLO desde el pedido',
+  (select jsonb_agg(jsonb_build_object('pedido_linea_id', id, 'cantidad', cantidad)) from public.pedido_lineas where pedido_id = '1f000000-0000-0000-0000-000000000001'),
+  current_date + 2, current_date + 25);

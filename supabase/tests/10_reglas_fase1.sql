@@ -165,4 +165,5 @@ select pg_temp.ok((select actualizado_por from empleados where codigo = 'E001') 
 select pg_temp.ok((select count(*) from alertas where tipo = 'reloj_dudoso') = 1, 'Alerta creada por reloj desfasado');
 
 -- ---------- Consecutivos ----------
-select pg_temp.ok(siguiente_consecutivo('OP') = 'OP-000001' and siguiente_consecutivo('OP') = 'OP-000002', 'Consecutivo de OP sin repetir');
+select pg_temp.ok((select split_part(b, '-', 2)::int = split_part(a, '-', 2)::int + 1
+                   from (select siguiente_consecutivo('OP') a, siguiente_consecutivo('OP') b) x), 'Consecutivo de OP sin repetir (cada uno es el siguiente)');
