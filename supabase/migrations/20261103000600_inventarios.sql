@@ -96,8 +96,8 @@ create table public.ajustes_inventario (
   origen         text not null default 'manual' check (origen in ('manual','conteo')),
   conteo_id      uuid,
   estado         text not null default 'borrador' check (estado in ('borrador','enviado','aprobado','rechazado')),
-  solicitado_por uuid default auth.uid(),
-  aprobado_por   uuid,
+  solicitado_por uuid default auth.uid() references public.perfiles(id),
+  aprobado_por   uuid references public.perfiles(id),
   decidido_en    timestamptz,
   comentario     text
 );

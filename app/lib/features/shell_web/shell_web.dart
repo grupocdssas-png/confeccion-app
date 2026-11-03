@@ -10,7 +10,7 @@ import 'iconos.dart';
 
 /// Fase que está implementada hasta ahora (los módulos de fases posteriores se
 /// muestran en el menú pero atenuados).
-const faseActual = 1;
+const faseActual = 2;
 
 /// Estructura del panel web: menú lateral oscuro (fijo en pantallas anchas,
 /// desplegable en celular) + contenido.
@@ -73,7 +73,7 @@ class _MenuLateral extends ConsumerWidget {
                 padding: const EdgeInsets.fromLTRB(10, 14, 10, 6),
                 child: Text(g.toUpperCase(), style: estilo(11, peso: FontWeight.w600, color: Colores.menuTexto.withValues(alpha: 0.6))),
               ),
-              for (final p in grupos[g]!) _ItemMenu(permiso: p, activo: rutaActual == p.ruta),
+              for (final p in grupos[g]!) _ItemMenu(permiso: p, activo: p.ruta == '/' ? rutaActual == '/' : rutaActual.startsWith(p.ruta)),
             ],
           ]),
         ),

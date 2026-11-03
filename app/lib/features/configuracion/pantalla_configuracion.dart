@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../compartido/widgets.dart';
@@ -44,7 +45,13 @@ class PantallaConfiguracion extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-      const EncabezadoPagina('Configuración', subtitulo: 'Usuarios, roles y tablets de planta'),
+      EncabezadoPagina('Configuración', subtitulo: 'Usuarios, roles y tablets de planta', acciones: [
+        OutlinedButton.icon(
+          onPressed: () => context.go('/configuracion/etiquetas'),
+          icon: const Icon(Icons.print_outlined),
+          label: const Text('Impresoras y etiquetas'),
+        ),
+      ]),
       _Seccion(
         titulo: 'Usuarios y roles',
         proveedor: ref.watch(_usuariosProvider),
@@ -91,7 +98,7 @@ class PantallaConfiguracion extends ConsumerWidget {
         ],
       ),
       const SizedBox(height: 12),
-      Text('Crear usuarios y asignar roles desde esta pantalla llega en la Fase 2 (requiere una función de servidor segura). '
+      Text('Crear usuarios y asignar roles desde esta pantalla llega en una fase posterior (requiere una función de servidor segura). '
           'Por ahora se usan los usuarios de ejemplo del README.', style: estilo(12.5, color: Colores.textoSuave)),
     ]);
   }

@@ -5,6 +5,12 @@ import 'package:go_router/go_router.dart';
 import '../../features/acceso/pantalla_ingreso.dart';
 import '../../features/asistencia/pantalla_asistencia_web.dart';
 import '../../features/configuracion/pantalla_configuracion.dart';
+import '../../features/configuracion/pantalla_etiquetas.dart';
+import '../../features/inventario/pantalla_ajustes_conteos.dart';
+import '../../features/inventario/pantalla_entradas.dart';
+import '../../features/inventario/pantalla_insumos_kardex.dart';
+import '../../features/inventario/pantalla_materiales_ubicaciones.dart';
+import '../../features/inventario/pantalla_telas.dart';
 import '../../features/inicio/pantalla_inicio_web.dart';
 import '../../features/personal/pantalla_personal.dart';
 import '../../features/shell_web/shell_web.dart';
@@ -44,6 +50,20 @@ final routerWebProvider = Provider<GoRouter>((ref) {
           GoRoute(path: '/personal', builder: (_, _) => protegida('/personal', const PantallaPersonal())),
           GoRoute(path: '/asistencia', builder: (_, _) => protegida('/asistencia', const PantallaAsistenciaWeb())),
           GoRoute(path: '/configuracion', builder: (_, _) => protegida('/configuracion', const PantallaConfiguracion())),
+          GoRoute(path: '/configuracion/etiquetas', builder: (_, _) => protegida('/configuracion', const PantallaEtiquetas())),
+          GoRoute(path: '/inventario', redirect: (_, _) => '/inventario/telas'),
+          GoRoute(path: '/inventario/telas', builder: (_, _) => protegida('/inventario', const PantallaTelas())),
+          GoRoute(path: '/inventario/retazos', builder: (_, _) => protegida('/inventario', const PantallaTelas(retazos: true))),
+          GoRoute(path: '/inventario/insumos', builder: (_, _) => protegida('/inventario', const PantallaInsumos())),
+          GoRoute(path: '/inventario/kardex', builder: (_, _) => protegida('/inventario', const PantallaKardex())),
+          GoRoute(path: '/inventario/entradas', builder: (_, _) => protegida('/inventario', const PantallaEntradas())),
+          GoRoute(path: '/inventario/entradas/nueva', builder: (_, _) => protegida('/inventario', const PantallaNuevaEntrada())),
+          GoRoute(path: '/inventario/entradas/:id', builder: (_, s) => protegida('/inventario', PantallaDetalleEntrada(id: s.pathParameters['id']!))),
+          GoRoute(path: '/inventario/ajustes', builder: (_, _) => protegida('/inventario', const PantallaAjustes())),
+          GoRoute(path: '/inventario/conteos', builder: (_, _) => protegida('/inventario', const PantallaConteosWeb())),
+          GoRoute(path: '/inventario/conteos/:id', builder: (_, s) => protegida('/inventario', PantallaDetalleConteo(id: s.pathParameters['id']!))),
+          GoRoute(path: '/inventario/materiales', builder: (_, _) => protegida('/inventario', const PantallaMateriales())),
+          GoRoute(path: '/inventario/ubicaciones', builder: (_, _) => protegida('/inventario', const PantallaUbicaciones())),
           GoRoute(path: '/:modulo', builder: (_, s) => PaginaWeb(child: PantallaProximamente(ruta: '/${s.pathParameters['modulo']}'))),
         ],
       ),
