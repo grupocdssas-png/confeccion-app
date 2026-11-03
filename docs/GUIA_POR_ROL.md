@@ -5,10 +5,12 @@ Se amplía en cada fase. Lo disponible hoy (Fase 1) está marcado con ✅.
 | Rol | Dónde trabaja | Qué puede hacer hoy |
 |---|---|---|
 | **Gerencia** | Panel web | ✅ Ve todos los módulos. ✅ Personal, asistencia del día, usuarios y tablets, eventos rechazados. |
-| **Jefe de producción** | Panel web | ✅ Asistencia del día en vivo. ✅ Lista de personal. ✅ Aprueba fichas técnicas por Producción y ajusta la lista de operaciones. Próximo: OP, programación, balanceo. |
+| **Jefe de producción** | Panel web | ✅ Asistencia del día en vivo. ✅ Lista de personal. ✅ Aprueba fichas técnicas por Producción y ajusta la lista de operaciones. ✅ Órdenes de producción: crear (desde pedidos o directas), cambiar cantidades, prioridad y fechas, anular, registrar avance por proceso, hojas de secuencia y máquinas. Próximo: programación y balanceo. |
 | **Supervisor de módulo (confección)** | Panel web / tablet | ✅ Asistencia de su gente. Próximo: balanceo y tablero de su módulo. |
 | **Bodega** | Panel web / celular | ✅ Entradas de telas e insumos con etiquetas, rollos, retazos, traslados, kardex, conteos con el celular, solicitar ajustes. |
 | **Costos** | Panel web | ✅ Aprueba o rechaza ajustes de inventario (con motivo). Consulta inventario y kardex. ✅ Valor minuto e indirectos. ✅ Aprueba fichas técnicas por Costos. |
+| **Comercial** | Panel web | ✅ Pedidos de clientes por referencia, color y talla; ve qué está en OP y qué falta. |
+| **Compras** | Panel web | ✅ Requisiciones pendientes (automáticas por faltantes de OP y manuales) → órdenes de compra → seguimiento de lo recibido. |
 | **Diseño** | Panel web | ✅ Lista maestra de operaciones e importación desde SAMMU. ✅ Fichas técnicas: crea, edita versiones en borrador, envía a aprobación y aprueba por Diseño. |
 | **Operario** | Tablet | ✅ Marca entrada y salida con el QR del carnet (también sin internet). Próximo (Fase 6): marcar operaciones. |
 | **Satélite** | Panel web (limitado) | Próximo (Fase 6): ver sus remisiones. |

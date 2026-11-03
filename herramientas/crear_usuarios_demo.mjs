@@ -20,6 +20,8 @@ const usuarios = [
   { correo: 'bodega@ejemplo.co', nombre: 'Bodega (EJEMPLO)', roles: ['bodega'] },
   { correo: 'costos@ejemplo.co', nombre: 'Costos (EJEMPLO)', roles: ['costos'] },
   { correo: 'diseno@ejemplo.co', nombre: 'Diseño (EJEMPLO)', roles: ['diseno'] },
+  { correo: 'compras@ejemplo.co', nombre: 'Compras (EJEMPLO)', roles: ['compras'] },
+  { correo: 'comercial@ejemplo.co', nombre: 'Comercial (EJEMPLO)', roles: ['comercial'] },
   { correo: 'tablet-ent@planta.local', nombre: 'Tablet entrada', roles: ['dispositivo'], estacion: 'ENT', tipo: 'tablet' },
   { correo: 'tablet-mod1@planta.local', nombre: 'Tablet Módulo 1', roles: ['dispositivo'], estacion: 'MOD1', tipo: 'tablet' },
   { correo: 'celular-bodega@planta.local', nombre: 'Celular bodega', roles: ['dispositivo'], estacion: 'BOD', tipo: 'celular' },

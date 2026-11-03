@@ -7,7 +7,8 @@ materiales, corte, costos e inventarios.
 - **Panel web** (oficina, responsive) y, desde la Fase 8, **tableros de TV**.
 - **Servidor**: Supabase (PostgreSQL, Auth, RLS, Storage, Realtime) + **PowerSync** para la sincronización.
 
-> Estado: **Fase 3 terminada** (operaciones, ficha técnica versionada e importador SAMMU). Ver [`docs/fase-3/FASE_3.md`](docs/fase-3/FASE_3.md),
+> Estado: **Fase 4 terminada** (pedidos, OP con reservas, requisiciones y compras). Ver [`docs/fase-4/FASE_4.md`](docs/fase-4/FASE_4.md),
+> [`docs/fase-3/FASE_3.md`](docs/fase-3/FASE_3.md),
 > [`docs/fase-2/FASE_2.md`](docs/fase-2/FASE_2.md),
 > [`docs/fase-1/FASE_1.md`](docs/fase-1/FASE_1.md) y la propuesta aprobada en [`docs/fase-0/`](docs/fase-0/).
 
@@ -82,7 +83,7 @@ SUPABASE_URL=https://SU_PROJECT_REF.supabase.co SUPABASE_SERVICE_ROLE_KEY=su_cla
 ```
 
 El script imprime la contraseña de los usuarios de ejemplo. Crea: `gerencia@ejemplo.co`, `jefe.produccion@ejemplo.co`,
-`bodega@ejemplo.co`, `costos@ejemplo.co` (aprueba ajustes y fichas), `diseno@ejemplo.co` y las cuentas técnicas `tablet-ent@planta.local`,
+`bodega@ejemplo.co`, `costos@ejemplo.co` (aprueba ajustes y fichas), `diseno@ejemplo.co`, `compras@ejemplo.co`, `comercial@ejemplo.co` y las cuentas técnicas `tablet-ent@planta.local`,
 `tablet-mod1@planta.local` y `celular-bodega@planta.local`. Se puede volver a correr sin problema.
 
 ## 3. Configurar PowerSync (nube)

@@ -63,14 +63,15 @@ class _Linea {
       : lote = TextEditingController(text: lote),
         tono = TextEditingController(text: tono),
         costo = TextEditingController(text: costo);
-  String? material, color, ubicacion;
+  String? material, color, ubicacion, ocLineaId;
   final TextEditingController lote, tono, costo;
   final ancho = TextEditingController(), metros = TextEditingController(), kilos = TextEditingController(),
       cantidad = TextEditingController();
 }
 
 class PantallaNuevaEntrada extends ConsumerStatefulWidget {
-  const PantallaNuevaEntrada({super.key});
+  const PantallaNuevaEntrada({super.key, this.ocId});
+  final String? ocId;
   @override
   ConsumerState<PantallaNuevaEntrada> createState() => _PantallaNuevaEntradaState();
 }
@@ -82,6 +83,32 @@ class _PantallaNuevaEntradaState extends ConsumerState<PantallaNuevaEntrada> {
   final _lineas = <_Linea>[];
   var _guardando = false;
   String? _error;
+  String? _ocConsecutivo;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.ocId != null) _cargarOc();
+  }
+
+  /// Entrada desde una orden de compra: proveedor y líneas pendientes de recibir.
+  Future<void> _cargarOc() async {
+    final o = await db.from('ordenes_compra').select('consecutivo, proveedor_id, oc_lineas(id, material_id, color_id, cantidad, cantidad_recibida, precio_unitario, materiales(tipo))')
+        .eq('id', widget.ocId!).single();
+    if (!mounted) return;
+    setState(() {
+      _ocConsecutivo = o['consecutivo'];
+      _proveedor = o['proveedor_id'];
+      for (final l in o['oc_lineas'] as List) {
+        final pendiente = (l['cantidad'] as num) - (l['cantidad_recibida'] as num);
+        if (pendiente <= 0) continue;
+        final linea = _Linea(material: l['material_id'], color: l['color_id'], costo: l['precio_unitario'] == null ? '' : '${l['precio_unitario']}'.replaceAll('.', ','))
+          ..ocLineaId = l['id'];
+        if (l['materiales']['tipo'] != 'tela') linea.cantidad.text = '$pendiente'.replaceAll('.', ',');
+        _lineas.add(linea);
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -90,7 +117,9 @@ class _PantallaNuevaEntradaState extends ConsumerState<PantallaNuevaEntrada> {
       loading: () => const LinearProgressIndicator(),
       error: (e, _) => Text(mensajeError(e)),
       data: (c) => Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-        EncabezadoPagina('Nueva entrada', subtitulo: 'Al confirmar se crean los rollos (TL-…), se suma al inventario y se imprimen las etiquetas.',
+        EncabezadoPagina(_ocConsecutivo == null ? 'Nueva entrada' : 'Entrada de la orden de compra $_ocConsecutivo',
+            subtitulo: 'Al confirmar se crean los rollos (TL-…), se suma al inventario y se imprimen las etiquetas.'
+                '${_ocConsecutivo == null ? '' : ' Lo recibido se descuenta de la OC y se reserva para las OP que lo esperan.'}',
             acciones: [OutlinedButton(onPressed: () => context.go('/inventario/entradas'), child: const Text('Cancelar'))]),
         Tarjeta(
           titulo: 'Datos de la entrada',
@@ -98,6 +127,8 @@ class _PantallaNuevaEntradaState extends ConsumerState<PantallaNuevaEntrada> {
             SizedBox(
               width: 320,
               child: DropdownButtonFormField<String>(
+                key: ValueKey(_proveedor),
+                initialValue: _proveedor,
                 decoration: const InputDecoration(labelText: 'Proveedor'),
                 items: [for (final p in c.proveedores) DropdownMenuItem(value: p['id'] as String, child: Text('${p['nombre']}', overflow: TextOverflow.ellipsis))],
                 onChanged: (v) => setState(() => _proveedor = v),
@@ -217,7 +248,7 @@ class _PantallaNuevaEntradaState extends ConsumerState<PantallaNuevaEntrada> {
             tooltip: 'Otro rollo igual (mismo material, color, lote y costo)',
             icon: const Icon(Icons.copy_all_outlined),
             onPressed: () => setState(() => _lineas.insert(i + 1, _Linea(material: l.material, color: l.color, lote: l.lote.text,
-                tono: l.tono.text, costo: l.costo.text, ubicacion: l.ubicacion)..ancho.text = l.ancho.text)),
+                tono: l.tono.text, costo: l.costo.text, ubicacion: l.ubicacion)..ancho.text = l.ancho.text..ocLineaId = l.ocLineaId)),
           ),
         IconButton(tooltip: 'Quitar', icon: const Icon(Icons.delete_outline), onPressed: () => setState(() => _lineas.removeAt(i))),
       ]),
@@ -245,14 +276,14 @@ class _PantallaNuevaEntradaState extends ConsumerState<PantallaNuevaEntrada> {
         final cantidad = esTela ? (m['unidad'] == 'kg' ? kilos : metros) : numeroCo(l.cantidad.text);
         if (cantidad == null || cantidad <= 0) throw 'Línea ${i + 1}: falta la cantidad (${esTela ? 'kilos y metros' : m['unidad']})';
         filas.add({
-          'orden': i + 1, 'material_id': l.material, 'color_id': l.color, 'cantidad': cantidad,
+          'orden': i + 1, 'material_id': l.material, 'color_id': l.color, 'cantidad': cantidad, 'oc_linea_id': l.ocLineaId,
           'costo_unitario': numeroCo(l.costo.text), 'ubicacion_id': l.ubicacion,
           if (esTela) ...{'lote_tintura': l.lote.text.trim(), 'tono': l.tono.text.trim().isEmpty ? null : l.tono.text.trim(),
             'ancho_real_cm': numeroCo(l.ancho.text), 'metros': metros, 'kilos': kilos},
         });
       }
       final rec = await db.from('recepciones').insert({
-        'proveedor_id': _proveedor, 'bodega_id': _bodega,
+        'proveedor_id': _proveedor, 'bodega_id': _bodega, 'oc_id': widget.ocId,
         'factura_proveedor': _factura.text.trim().isEmpty ? null : _factura.text.trim(),
         'observacion': _obs.text.trim().isEmpty ? null : _obs.text.trim(),
       }).select('id, consecutivo').single();

@@ -72,8 +72,8 @@ class PantallaInicioWeb extends ConsumerWidget {
             padding: const EdgeInsets.symmetric(vertical: 5),
             child: Row(children: [
               SizedBox(width: 34, child: Text('F$n', style: estiloCodigo(12, color: Colores.textoSuave))),
-              Expanded(child: Text(nombre, style: estilo(14, color: n <= 3 ? Colores.texto : Colores.textoSuave))),
-              if (n <= 3) const Pastilla('Lista', color: Colores.verde, icono: Icons.check),
+              Expanded(child: Text(nombre, style: estilo(14, color: n <= 4 ? Colores.texto : Colores.textoSuave))),
+              if (n <= 4) const Pastilla('Lista', color: Colores.verde, icono: Icons.check),
             ]),
           ),
       ]),

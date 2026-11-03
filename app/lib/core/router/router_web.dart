@@ -9,6 +9,10 @@ import '../../features/configuracion/pantalla_etiquetas.dart';
 import '../../features/fichas/pantalla_ficha.dart';
 import '../../features/fichas/pantalla_fichas.dart';
 import '../../features/inventario/pantalla_ajustes_conteos.dart';
+import '../../features/produccion/pantalla_compras.dart';
+import '../../features/produccion/pantalla_op.dart';
+import '../../features/produccion/pantalla_ops.dart';
+import '../../features/produccion/pantalla_pedidos.dart';
 import '../../features/operaciones/pantalla_importar.dart';
 import '../../features/operaciones/pantalla_operaciones.dart';
 import '../../features/inventario/pantalla_entradas.dart';
@@ -55,6 +59,12 @@ final routerWebProvider = Provider<GoRouter>((ref) {
           GoRoute(path: '/asistencia', builder: (_, _) => protegida('/asistencia', const PantallaAsistenciaWeb())),
           GoRoute(path: '/configuracion', builder: (_, _) => protegida('/configuracion', const PantallaConfiguracion())),
           GoRoute(path: '/configuracion/etiquetas', builder: (_, _) => protegida('/configuracion', const PantallaEtiquetas())),
+          GoRoute(path: '/pedidos', builder: (_, _) => protegida('/pedidos', const PantallaPedidos())),
+          GoRoute(path: '/pedidos/:id', builder: (_, s) => protegida('/pedidos', PantallaPedido(key: ValueKey(s.pathParameters['id']), id: s.pathParameters['id']!))),
+          GoRoute(path: '/op', builder: (_, _) => protegida('/op', const PantallaOps())),
+          GoRoute(path: '/op/:id', builder: (_, s) => protegida('/op', PantallaOp(key: ValueKey(s.pathParameters['id']), id: s.pathParameters['id']!))),
+          GoRoute(path: '/compras', builder: (_, _) => protegida('/compras', const PantallaCompras())),
+          GoRoute(path: '/compras/oc/:id', builder: (_, s) => protegida('/compras', PantallaOc(key: ValueKey(s.pathParameters['id']), id: s.pathParameters['id']!))),
           GoRoute(path: '/operaciones', builder: (_, _) => protegida('/operaciones', const PantallaOperaciones())),
           GoRoute(path: '/operaciones/importar', builder: (_, _) => protegida('/operaciones', const PantallaImportar())),
           GoRoute(path: '/fichas', builder: (_, _) => protegida('/fichas', const PantallaFichas())),
@@ -65,7 +75,7 @@ final routerWebProvider = Provider<GoRouter>((ref) {
           GoRoute(path: '/inventario/insumos', builder: (_, _) => protegida('/inventario', const PantallaInsumos())),
           GoRoute(path: '/inventario/kardex', builder: (_, _) => protegida('/inventario', const PantallaKardex())),
           GoRoute(path: '/inventario/entradas', builder: (_, _) => protegida('/inventario', const PantallaEntradas())),
-          GoRoute(path: '/inventario/entradas/nueva', builder: (_, _) => protegida('/inventario', const PantallaNuevaEntrada())),
+          GoRoute(path: '/inventario/entradas/nueva', builder: (_, s) => protegida('/inventario', PantallaNuevaEntrada(key: ValueKey(s.uri.toString()), ocId: s.uri.queryParameters['oc']))),
           GoRoute(path: '/inventario/entradas/:id', builder: (_, s) => protegida('/inventario', PantallaDetalleEntrada(id: s.pathParameters['id']!))),
           GoRoute(path: '/inventario/ajustes', builder: (_, _) => protegida('/inventario', const PantallaAjustes())),
           GoRoute(path: '/inventario/conteos', builder: (_, _) => protegida('/inventario', const PantallaConteosWeb())),
