@@ -88,5 +88,5 @@ capas sugeridas (20 capas de negro repartidas en TL-000003 y TL-000001 del mismo
 - **Sin destajo:** la planta no paga a destajo. Se quitó el valor a destajo de la lista de operaciones, de la ficha (paso 6),
   de su PDF y del importador (la columna *Precio/Tarifa* de SAMMU se ignora). La columna queda en la base sin uso y en
   cero. En la Fase 8 se liquidan solo los incentivos por eficiencia, si aplican.
-- **OP activas de SAMMU:** propuesta de plantilla en `herramientas/plantillas_importacion/op_activas_ejemplo.csv`.
+- **OP de SAMMU:** no se importan. Las órdenes abiertas se cierran en SAMMU y las nuevas se crean en la app.
 

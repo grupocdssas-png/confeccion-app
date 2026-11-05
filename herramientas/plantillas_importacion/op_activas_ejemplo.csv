@@ -1,5 +1,0 @@
-OP;Referencia;Color;Talla;Cantidad;Fecha entrega;Proceso actual;Cantidad terminada en el proceso;Pedido / cliente;Observación
-OP-EJ-1001;CAM-001;N;S;20;2026-11-28;confeccion;12;Cliente Mayorista (EJEMPLO);EJEMPLO
-OP-EJ-1001;CAM-001;N;M;40;2026-11-28;confeccion;25;Cliente Mayorista (EJEMPLO);EJEMPLO
-OP-EJ-1001;CAM-001;GJ;M;20;2026-11-28;confeccion;0;Cliente Mayorista (EJEMPLO);EJEMPLO
-OP-EJ-1002;CAM-001;N;L;30;2026-12-05;corte;0;;EJEMPLO
