@@ -73,3 +73,10 @@ streams:
         WHERE balanceo_id IN (SELECT id FROM balanceos WHERE estado = 'publicado')
       - SELECT id, balanceo_id, puesto_id, ficha_operacion_id, fraccion FROM balanceo_asignaciones
         WHERE balanceo_id IN (SELECT id FROM balanceos WHERE estado = 'publicado')
+
+  # Causas de paro (Fase 8)
+  paros_planta:
+    auto_subscribe: true
+    queries:
+      - SELECT id, codigo, nombre, visible_tablet, detiene_trabajo, detiene_celula, rol_validador, minutos_definidos, descuenta_operario
+        FROM causas_paro WHERE activa = true

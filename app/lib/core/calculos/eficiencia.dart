@@ -1,19 +1,31 @@
 /// Eficiencia de las marcaciones (Dart puro). La tablet la muestra al instante;
 /// la oficial la calcula el servidor (fn_marcacion_oficial) con la misma regla:
 ///  * minutos esperados = SAM × repeticiones × unidades (reproceso: SAM de reproceso);
-///  * minutos reales = desde la marcación anterior del mismo operario el mismo día;
-///    si pasaron más de [maxMinutos] (pausa, almuerzo) no se mide;
+///  * minutos reales = desde la marcación anterior del mismo operario el mismo día,
+///    menos los paros que descuentan al operario; si quedan más de [maxMinutos] no se mide;
 ///  * eficiencia % = esperados / reales × 100.
 library;
 
 double minutosEsperados({required double sam, double? samReproceso, required double repeticiones, required int unidades, bool reproceso = false}) =>
     _r((reproceso ? (samReproceso ?? sam) : sam) * repeticiones * unidades, 3);
 
-/// null si no hay anterior, si es otro día (Bogotá) o si pasó más de [maxMinutos].
-double? minutosReales(DateTime? anterior, DateTime actual, {double maxMinutos = 30}) {
+/// Minutos de los [paros] que caen entre [desde] y [hasta] (se descuentan al operario).
+double minutosParo(DateTime desde, DateTime hasta, List<({DateTime inicio, DateTime fin})> paros) {
+  var ms = 0;
+  for (final p in paros) {
+    final a = p.inicio.isAfter(desde) ? p.inicio : desde;
+    final b = p.fin.isBefore(hasta) ? p.fin : hasta;
+    if (b.isAfter(a)) ms += b.difference(a).inMilliseconds;
+  }
+  return ms / 60000;
+}
+
+/// Minutos desde la marcación anterior, descontando los paros del operario.
+/// null si no hay anterior, si es otro día (Bogotá) o si (ya sin paros) pasó más de [maxMinutos].
+double? minutosReales(DateTime? anterior, DateTime actual, {double maxMinutos = 30, List<({DateTime inicio, DateTime fin})> paros = const []}) {
   if (anterior == null) return null;
   if (_diaBogota(anterior) != _diaBogota(actual)) return null;
-  final m = actual.difference(anterior).inMilliseconds / 60000;
+  final m = actual.difference(anterior).inMilliseconds / 60000 - minutosParo(anterior, actual, paros);
   if (m <= 0 || m > maxMinutos) return null;
   return _r(m, 3);
 }

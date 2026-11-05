@@ -29,4 +29,14 @@ void main() {
     ]), 116.7);
     expect(eficienciaDe(const []), isNull);
   });
+
+  test('los paros se descuentan del tiempo real (mismo caso que el servidor)', () {
+    final t0 = DateTime.utc(2026, 11, 5, 14, 0);
+    final paro = (inicio: t0.add(const Duration(minutes: 2)), fin: t0.add(const Duration(minutes: 47)));
+    // 48 min entre marcaciones, 45 de paro por daño de máquina → 3 min reales
+    expect(minutosReales(t0, t0.add(const Duration(minutes: 48)), paros: [paro]), 3);
+    expect(minutosReales(t0, t0.add(const Duration(minutes: 48))), isNull, reason: 'sin descontar el paro serían 48 min: no se mide');
+    expect(minutosParo(t0, t0.add(const Duration(minutes: 10)), [paro]), 8, reason: 'solo cuenta la parte del paro dentro del intervalo');
+  });
 }
+
