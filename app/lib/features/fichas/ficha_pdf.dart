@@ -136,11 +136,11 @@ Future<Uint8List> generarFichaPdf(Map<String, dynamic> f, {bool conImagenes = tr
       pw.Text([for (final x in ordenar(f['ficha_ruta'])) '${x['orden']}. ${x['proceso']}${x['modalidad'] != 'interno' ? ' (${x['modalidad']})' : ''}'].join('   →   '),
           style: const pw.TextStyle(fontSize: 9)),
       titulo('Secuencia de operaciones'),
-      tabla(['Sec.', 'Código', 'Operación', 'Proceso', 'Parte', 'SAM', 'Und/h', 'Rep.', 'Máquina', 'Valor'], [
+      tabla(['Sec.', 'Código', 'Operación', 'Proceso', 'Parte', 'SAM', 'Und/h', 'Rep.', 'Máquina'], [
         for (final o in ops)
           ['${o['secuencia']}', '${o['operaciones']?['codigo']}', '${o['operaciones']?['nombre']}${o['es_contadora'] == true ? ' ★' : ''}', '${o['proceso']}',
            '${nombreParte[o['parte_id']] ?? ''}', n(o['sam'], 3), n(60 / (o['sam'] as num), 1), n(o['repeticiones'], 0),
-           '${o['tipos_maquina']?['codigo'] ?? ''}', Formato.cop(o['valor_destajo'])],
+           '${o['tipos_maquina']?['codigo'] ?? ''}'],
       ]),
       pw.Text('★ operación contadora', style: const pw.TextStyle(fontSize: 7)),
       if (costos.isNotEmpty) ...[

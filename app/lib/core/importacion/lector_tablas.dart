@@ -148,7 +148,6 @@ const _camposSammu = [
   CampoImportacion('maquina', 'Máquina / sitio de trabajo', ['sitio de trabajo', 'maquina', 'tipo maquina', 'equipo', 'cod maquina', 'sitio']),
   CampoImportacion('proceso', 'Proceso', ['proceso', 'area', 'seccion']),
   CampoImportacion('repeticiones', 'Repeticiones', ['repeticiones', 'rep', 'veces', 'frecuencia'], numero: true),
-  CampoImportacion('valor_destajo', 'Valor a destajo', ['precio', 'valor', 'valor destajo', 'tarifa', 'valor unidad', 'destajo'], numero: true),
   CampoImportacion('revision', 'Es operación de revisión', ['es operacion de revision', 'revision', 'es revision']),
   CampoImportacion('sam_reproceso', 'SAM de reproceso', ['sam de reproceso', 'sam reproceso'], numero: true),
   CampoImportacion('unidades_marcacion', 'Unidades al marcar', ['unidades al marcar', 'unidades por marcacion', 'unidades marcar'], numero: true),

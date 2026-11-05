@@ -14,7 +14,7 @@ final fichaProvider = FutureProvider.autoDispose.family<Map<String, dynamic>, St
         'ficha_medidas(*, ficha_medida_tallas(*)), '
         'ficha_bom(*, ficha_bom_consumos(*), materiales(codigo, nombre, unidad, tipo, costo_estandar, maneja_color)), '
         'ficha_artes(*), ficha_ruta(*), '
-        'ficha_operaciones(*, operaciones(codigo, nombre, sam, valor_destajo), tipos_maquina(codigo, nombre)), '
+        'ficha_operaciones(*, operaciones(codigo, nombre, sam), tipos_maquina(codigo, nombre)), '
         'ficha_costo_estandar(*), ficha_aprobaciones(*, perfiles:usuario_id(nombre))')
     .eq('id', id)
     .single());

@@ -39,7 +39,7 @@ void main() {
     final m = autoMapear('operaciones', t[0]);
     final filas = construirFilas('operaciones', t.sublist(1), m, decimalComa: tl.decimalComa);
     expect(filas.first['sam'], '0.35');
-    expect(filas.first['valor_destajo'], '1250');
+    expect(filas.first.containsKey('valor_destajo'), isFalse, reason: 'no se paga a destajo: la columna de precio se ignora');
   });
 
   test('CSV UTF-8 con BOM y comas', () {
@@ -53,7 +53,7 @@ void main() {
     expect(m['nombre'], 1);
     expect(m['sam'], 2);
     expect(m['maquina'], 3);
-    expect(m['valor_destajo'], 4);
+    expect(m.containsKey('valor_destajo'), isFalse);
     expect(m['familia'], isNull);
   });
 
@@ -83,7 +83,7 @@ void main() {
     test('reconoce todas sus columnas para importar la secuencia', () {
       final m = autoMapear('secuencia', t.filas.first);
       for (final c in ['secuencia', 'nombre', 'maquina', 'sam', 'proceso', 'repeticiones', 'contadora', 'revision', 'sam_reproceso',
-                       'sin_talla_color', 'cambiar_unidades', 'unidades_marcacion', 'valor_destajo']) {
+                       'sin_talla_color', 'cambiar_unidades', 'unidades_marcacion']) {
         expect(m[c], isNotNull, reason: c);
       }
       expect(m['maquina'], 2, reason: '"Sitio de trabajo" es la máquina');

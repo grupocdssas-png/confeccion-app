@@ -24,7 +24,7 @@ final catalogoDisenoProvider = FutureProvider((ref) async {
   return (familias: r[0], tipos: r[1], maquinas: r[2], procesos: r[3]);
 });
 
-/// Lista maestra de operaciones (SAM, unidades/hora, valor a destajo, máquina…).
+/// Lista maestra de operaciones (SAM, unidades/hora, máquina…). La planta no paga a destajo: no se maneja valor por operación.
 class PantallaOperaciones extends ConsumerStatefulWidget {
   const PantallaOperaciones({super.key});
   @override
@@ -79,7 +79,7 @@ class _PantallaOperacionesState extends ConsumerState<PantallaOperaciones> {
           return Tarjeta(
             padding: EdgeInsets.zero,
             child: Tabla(
-              columnas: const ['Código', 'Operación', 'Familia / tipo', 'Proceso', 'SAM', 'Und/h', 'Valor', 'Máquina', 'Parte', 'Rep.', '', ''],
+              columnas: const ['Código', 'Operación', 'Familia / tipo', 'Proceso', 'SAM', 'Und/h', 'Máquina', 'Parte', 'Rep.', '', ''],
               numericas: const {4, 5, 6, 9},
               vacio: 'No hay operaciones. Créelas o impórtelas desde SAMMU.',
               filas: [
@@ -97,7 +97,6 @@ class _PantallaOperacionesState extends ConsumerState<PantallaOperaciones> {
                     DataCell(Pastilla(Colores.nombreProceso(o['proceso']), color: Colores.deProceso(o['proceso']))),
                     DataCell(Text(Formato.numero(o['sam'], decimales: 3), style: const TextStyle(fontWeight: FontWeight.w600))),
                     DataCell(Text(Formato.numero(o['unidades_hora'], decimales: 1))),
-                    DataCell(Text(Formato.cop(o['valor_destajo']))),
                     DataCell(Text('${o['tipos_maquina']?['codigo'] ?? '—'}', style: estiloCodigo(12.5, peso: FontWeight.w400))),
                     DataCell(Text('${o['parte'] ?? '—'}')),
                     DataCell(Text(Formato.numero(o['repeticiones'], decimales: (o['repeticiones'] as num) % 1 == 0 ? 0 : 2))),
@@ -127,15 +126,13 @@ class _DialogoHistorial extends StatelessWidget {
             builder: (_, s) => !s.hasData
                 ? const LinearProgressIndicator()
                 : Tabla(
-                    columnas: const ['Fecha', 'SAM', 'Valor', 'Origen', 'Usuario'],
+                    columnas: const ['Fecha', 'SAM', 'Origen', 'Usuario'],
                     filas: [
                       for (final h in s.data!)
                         DataRow(cells: [
                           DataCell(Text(Formato.fechaHora(DateTime.parse(h['fecha'])))),
                           DataCell(Text(h['sam_anterior'] == null ? Formato.numero(h['sam_nuevo'], decimales: 3)
                               : '${Formato.numero(h['sam_anterior'], decimales: 3)} → ${Formato.numero(h['sam_nuevo'], decimales: 3)}')),
-                          DataCell(Text(h['valor_anterior'] == null ? Formato.cop(h['valor_nuevo'])
-                              : '${Formato.cop(h['valor_anterior'])} → ${Formato.cop(h['valor_nuevo'])}')),
                           DataCell(Text(const {'creacion': 'Creación', 'manual': 'Manual', 'importacion': 'Importación', 'estudio': 'Estudio de tiempos'}[h['origen']] ?? '${h['origen']}')),
                           DataCell(Text('${h['perfiles']?['nombre'] ?? 'Sistema'}')),
                         ]),
@@ -157,7 +154,7 @@ class DialogoOperacion extends ConsumerStatefulWidget {
 class _DialogoOperacionState extends ConsumerState<DialogoOperacion> {
   late final o = widget.operacion;
   late final _c = {
-    for (final k in ['codigo', 'nombre', 'sam', 'valor_destajo', 'parte', 'repeticiones', 'sam_reproceso', 'unidades_marcacion'])
+    for (final k in ['codigo', 'nombre', 'sam', 'parte', 'repeticiones', 'sam_reproceso', 'unidades_marcacion'])
       k: TextEditingController(text: o?[k] == null ? (k == 'repeticiones' ? '1' : '') : '${o![k]}'.replaceAll('.', ',')),
   };
   late String? _familia = o?['familia_id'], _tipo = o?['tipo_producto_id'], _maquina = o?['tipo_maquina_id'];
@@ -192,7 +189,6 @@ class _DialogoOperacionState extends ConsumerState<DialogoOperacion> {
             t('sam', 'SAM (minutos)', 130),
             SizedBox(width: 140, child: InputDecorator(decoration: const InputDecoration(labelText: 'Unidades / hora', isDense: true),
                 child: Text(sam == null || sam <= 0 ? '—' : Formato.numero(60 / sam, decimales: 1)))),
-            t('valor_destajo', 'Valor a destajo (COP)', 170),
             dd('Máquina', _maquina, cat.maquinas, (i) => '${i['codigo']} · ${i['nombre']}', (x) => _maquina = x, 230),
             t('parte', 'Parte', 150),
             t('repeticiones', 'Repeticiones por unidad', 180),
@@ -227,7 +223,7 @@ class _DialogoOperacionState extends ConsumerState<DialogoOperacion> {
     final d = {
       'codigo': _c['codigo']!.text.trim().toUpperCase(), 'nombre': _c['nombre']!.text.trim(),
       'familia_id': _familia, 'tipo_producto_id': _tipo, 'proceso': _proceso, 'sam': numeroCo(_c['sam']!.text),
-      'valor_destajo': numeroCo(_c['valor_destajo']!.text) ?? 0, 'tipo_maquina_id': _maquina,
+      'tipo_maquina_id': _maquina,
       'parte': _c['parte']!.text.trim().isEmpty ? null : _c['parte']!.text.trim(),
       'repeticiones': numeroCo(_c['repeticiones']!.text) ?? 1, 'tipo': _tipoOp,
       'restrictiva': _restrictiva, 'agrega_minutos_sam': _suma, 'activo': _activo,

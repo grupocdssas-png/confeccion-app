@@ -27,7 +27,6 @@ class PasoRuta extends ConsumerWidget {
     final ops = ordenar(f['ficha_operaciones'], 'secuencia');
     final partes = ordenar(f['ficha_partes']);
     final samTotal = ops.where((o) => o['agrega_minutos_sam'] == true).fold<double>(0, (a, o) => a + (o['sam'] as num) * (o['repeticiones'] as num));
-    final valorTotal = ops.fold<double>(0, (a, o) => a + (o['valor_destajo'] as num) * (o['repeticiones'] as num));
     Future<void> setRuta(String proceso, Map<String, dynamic> d) =>
         cambiar(context, ref, f['id'], () => db.from('ficha_ruta').update(d).eq('ficha_id', f['id']).eq('proceso', proceso));
 
@@ -77,7 +76,7 @@ class PasoRuta extends ConsumerWidget {
       ),
       const SizedBox(height: 16),
       Tarjeta(
-        titulo: 'Secuencia de operaciones · SAM total ${Formato.numero(samTotal, decimales: 3)} min · destajo ${Formato.cop(valorTotal)} por prenda',
+        titulo: 'Secuencia de operaciones · SAM total ${Formato.numero(samTotal, decimales: 3)} min',
         accion: editable
             ? Wrap(spacing: 8, children: [
                 OutlinedButton.icon(onPressed: () => importarSecuenciaSammu(context, ref, f), icon: const Icon(Icons.upload_file), label: const Text('Importar de SAMMU')),
@@ -93,7 +92,7 @@ class PasoRuta extends ConsumerWidget {
             columns: const [
               DataColumn(label: Text('Sec.'), numeric: true), DataColumn(label: Text('Código')), DataColumn(label: Text('Operación')),
               DataColumn(label: Text('Proceso')), DataColumn(label: Text('Parte')), DataColumn(label: Text('SAM'), numeric: true),
-              DataColumn(label: Text('Und/h'), numeric: true), DataColumn(label: Text('Valor'), numeric: true), DataColumn(label: Text('Máquina')),
+              DataColumn(label: Text('Und/h'), numeric: true), DataColumn(label: Text('Máquina')),
               DataColumn(label: Text('Rep.'), numeric: true), DataColumn(label: Text('Contadora')), DataColumn(label: Text('')),
             ],
             rows: [
@@ -117,8 +116,6 @@ class PasoRuta extends ConsumerWidget {
                   DataCell(CampoGuardable(ancho: 78, numerico: true, alinearDerecha: true, habilitado: editable, valor: numTxt(o['sam']),
                       onGuardar: (v) => cambiar(context, ref, f['id'], () => db.from('ficha_operaciones').update({'sam': numeroCo(v)}).eq('id', o['id'])))),
                   DataCell(Text(Formato.numero(60 / (o['sam'] as num), decimales: 1))),
-                  DataCell(CampoGuardable(ancho: 84, numerico: true, alinearDerecha: true, habilitado: editable, valor: numTxt(o['valor_destajo']),
-                      onGuardar: (v) => cambiar(context, ref, f['id'], () => db.from('ficha_operaciones').update({'valor_destajo': numeroCo(v) ?? 0}).eq('id', o['id'])))),
                   DataCell(Text('${o['tipos_maquina']?['codigo'] ?? '—'}', style: estiloCodigo(12.5, peso: FontWeight.w400))),
                   DataCell(CampoGuardable(ancho: 56, numerico: true, alinearDerecha: true, habilitado: editable, valor: numTxt(o['repeticiones']),
                       onGuardar: (v) => cambiar(context, ref, f['id'], () => db.from('ficha_operaciones').update({'repeticiones': numeroCo(v) ?? 1}).eq('id', o['id'])))),
@@ -179,7 +176,7 @@ class PasoRuta extends ConsumerWidget {
                       value: ya.contains(o['id']) || sel.contains(o['id']),
                       onChanged: ya.contains(o['id']) ? null : (v) => set(() => v! ? sel.add(o['id']) : sel.remove(o['id'])),
                       title: Text('${o['codigo']} · ${o['nombre']}'),
-                      subtitle: Text('SAM ${Formato.numero(o['sam'], decimales: 3)} · ${Formato.cop(o['valor_destajo'])} · ${o['tipos_maquina']?['codigo'] ?? '—'} · ${o['proceso']}'
+                      subtitle: Text('SAM ${Formato.numero(o['sam'], decimales: 3)} · ${o['tipos_maquina']?['codigo'] ?? '—'} · ${o['proceso']}'
                           '${ya.contains(o['id']) ? ' · ya agregada' : ''}'),
                     ),
                 ])),
