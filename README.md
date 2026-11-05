@@ -7,7 +7,8 @@ materiales, corte, costos e inventarios.
 - **Panel web** (oficina, responsive) y, desde la Fase 8, **tableros de TV**.
 - **Servidor**: Supabase (PostgreSQL, Auth, RLS, Storage, Realtime) + **PowerSync** para la sincronización.
 
-> Estado: **Fase 10 terminada** (costos reales, trazabilidad inversa, dashboard e informes). Ver [`docs/fase-10/FASE_10.md`](docs/fase-10/FASE_10.md),
+> Estado: **Fase 11 terminada** (integraciones con Alegra y WhatsApp). Ver [`docs/fase-11/FASE_11.md`](docs/fase-11/FASE_11.md),
+> [`docs/fase-10/FASE_10.md`](docs/fase-10/FASE_10.md),
 > [`docs/fase-9/FASE_9.md`](docs/fase-9/FASE_9.md),
 > [`docs/fase-8/FASE_8.md`](docs/fase-8/FASE_8.md),
 > [`docs/fase-7/FASE_7.md`](docs/fase-7/FASE_7.md),

@@ -31,6 +31,7 @@ import '../../features/inventario/pantalla_insumos_kardex.dart';
 import '../../features/inventario/pantalla_materiales_ubicaciones.dart';
 import '../../features/inventario/pantalla_telas.dart';
 import '../../features/informes/pantalla_informes.dart';
+import '../../features/integraciones/pantalla_integraciones.dart';
 import '../../features/inicio/pantalla_inicio_web.dart';
 import '../../features/personal/pantalla_personal.dart';
 import '../../features/programacion/pantalla_programacion.dart';
@@ -78,6 +79,7 @@ final routerWebProvider = Provider<GoRouter>((ref) {
           // inicio: el dashboard para quien lo tiene; los demás, su página de inicio
           GoRoute(path: '/', builder: (_, _) => PaginaWeb(child: Consumer(builder: (_, ref, _) =>
               (ref.watch(sesionProvider).value?.puedeVer('dashboard') ?? false) ? const PantallaDashboard() : const PantallaInicioWeb()))),
+          GoRoute(path: '/integraciones', builder: (_, _) => protegida('/integraciones', const PantallaIntegraciones())),
           GoRoute(path: '/costos', builder: (_, _) => protegida('/costos', const PantallaCostos())),
           GoRoute(path: '/trazabilidad', builder: (_, s) => protegida('/trazabilidad', PantallaTrazabilidad(key: ValueKey(s.uri.toString()), codigo: s.uri.queryParameters['c']))),
           GoRoute(path: '/informes', builder: (_, s) => protegida('/informes', PantallaInformes(key: ValueKey(s.uri.queryParameters['i']), inicial: s.uri.queryParameters['i']))),

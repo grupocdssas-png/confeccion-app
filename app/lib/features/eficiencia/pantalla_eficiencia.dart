@@ -283,16 +283,45 @@ class _PantallaEficienciaState extends ConsumerState<PantallaEficiencia> {
       const SizedBox(height: 16),
       Tarjeta(
         titulo: 'Liquidación del rango · ${Formato.cop(total)}',
-        accion: OutlinedButton.icon(
-          onPressed: l.isEmpty
-              ? null
-              : () => descargarCsv('incentivos_${_iso(_desde)}_${_iso(_hasta)}.csv',
-                  ['Código', 'Operario', 'Célula', 'Grupo', 'Periodo', 'Min. estándar', 'Min. trabajados', 'Eficiencia %', 'Valor'], [
-                    for (final x in l)
-                      [x['codigo'], x['nombre'], x['celula'], x['grupo'], x['periodo'], x['minutos_esperados'], x['minutos_reales'], x['eficiencia'], x['valor']],
-                  ]),
-          icon: const Icon(Icons.download),
-          label: const Text('Excel para nómina (CSV)')),
+        accion: Wrap(spacing: 8, children: [
+          OutlinedButton.icon(
+            onPressed: l.isEmpty
+                ? null
+                : () => descargarCsv('incentivos_${_iso(_desde)}_${_iso(_hasta)}.csv',
+                    ['Código', 'Operario', 'Célula', 'Grupo', 'Periodo', 'Min. estándar', 'Min. trabajados', 'Eficiencia %', 'Valor'], [
+                      for (final x in l)
+                        [x['codigo'], x['nombre'], x['celula'], x['grupo'], x['periodo'], x['minutos_esperados'], x['minutos_reales'], x['eficiencia'], x['valor']],
+                    ]),
+            icon: const Icon(Icons.download),
+            label: const Text('Excel (CSV)')),
+          if (aprobar)
+            FilledButton.icon(
+              onPressed: total <= 0
+                  ? null
+                  : () async {
+                      final ok = await showDialog<bool>(
+                        context: context,
+                        builder: (d) => AlertDialog(
+                          title: const Text('Aprobar incentivos'),
+                          content: Text('Del ${Formato.fecha(_desde)} al ${Formato.fecha(_hasta)}: ${Formato.cop(total)}. '
+                              'Cada valor se agrega a la nómina del operario en Alegra Nómina. Una quincena se aprueba una sola vez.'),
+                          actions: [
+                            TextButton(onPressed: () => Navigator.pop(d, false), child: const Text('Cancelar')),
+                            FilledButton(onPressed: () => Navigator.pop(d, true), child: const Text('Aprobar y enviar')),
+                          ],
+                        ),
+                      );
+                      if (ok != true) return;
+                      try {
+                        await db.rpc('aprobar_incentivos', params: {'p_desde': _iso(_desde), 'p_hasta': _iso(_hasta)});
+                        if (mounted) avisar(context, 'Incentivos aprobados: se enviarán a Alegra Nómina');
+                      } catch (e) {
+                        if (mounted) avisar(context, mensajeError(e), error: true);
+                      }
+                    },
+              icon: const Icon(Icons.verified_outlined),
+              label: const Text('Aprobar y enviar a nómina')),
+        ]),
         child: Tabla(
           columnas: const ['Código', 'Operario', 'Célula', 'Grupo', 'Periodo', 'Eficiencia', 'Valor'],
           numericas: const {5, 6},

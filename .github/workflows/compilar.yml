@@ -35,6 +35,19 @@ jobs:
           herramientas/probar_bd.sh | tee salida.txt
           ! grep -qE "ERROR|FALLÓ" salida.txt
 
+  integraciones:
+    name: Integraciones (Alegra y WhatsApp simulados)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+      - name: Pruebas de la Edge Function
+        run: deno test supabase/functions/_compartido/
+      - name: Compila la Edge Function
+        run: deno check supabase/functions/integraciones/index.ts
+
   app:
     name: Pruebas, APK y panel web
     runs-on: ubuntu-latest

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 /// Ícono por nombre (columna `modulos.icono`).
 IconData iconoModulo(String? nombre) => switch (nombre) {
       'dashboard' => Icons.space_dashboard_outlined,
+      'sync' => Icons.sync_alt,
       'receipt' => Icons.receipt_long_outlined,
       'assignment' => Icons.assignment_outlined,
       'calendar' => Icons.calendar_month_outlined,

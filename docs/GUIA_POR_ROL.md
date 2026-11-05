@@ -130,3 +130,11 @@ En el detalle de la OP → **Despachar insumos** (bodega, cantidades) → *Despa
 Para un reclamo: con la etiqueta de la prenda salen los despachos y los paquetes posibles; con la etiqueta del paquete, el
 recorrido exacto (tela, cortador, satélite, operarios, calidad).
 
+## Costos: integraciones con Alegra
+
+1. *Integraciones → Envíos*: lo que salió a Alegra y WhatsApp. **Falta enlazar** dice qué enlazar; **Error**, el mensaje de Alegra
+   (corrija y pulse *Reintentar*).
+2. *Enlaces con Alegra*: busque el cliente, proveedor, satélite, material o producto en Alegra y enlácelo.
+3. *Nómina real*: al cerrar la quincena en Alegra Nómina, **Importar nómina**; el costo de las OP usa el valor real del minuto.
+4. Incentivos: *Eficiencia e incentivos → Incentivos* → **Aprobar y enviar a nómina** (una vez por quincena).
+
