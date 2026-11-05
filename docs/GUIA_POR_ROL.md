@@ -12,8 +12,8 @@ Se amplía en cada fase. Lo disponible hoy (Fase 1) está marcado con ✅.
 | **Comercial** | Panel web | ✅ Pedidos de clientes por referencia, color y talla; ve qué está en OP y qué falta. |
 | **Compras** | Panel web | ✅ Requisiciones pendientes (automáticas por faltantes de OP y manuales) → órdenes de compra → seguimiento de lo recibido. |
 | **Diseño** | Panel web | ✅ Lista maestra de operaciones e importación desde SAMMU. ✅ Fichas técnicas: crea, edita versiones en borrador, envía a aprobación y aprueba por Diseño. |
-| **Operario** | Tablet | ✅ Marca entrada y salida con el QR del carnet (también sin internet). Próximo (Fase 6): marcar operaciones. |
-| **Satélite** | Panel web (limitado) | Próximo (Fase 6): ver sus remisiones. |
+| **Operario** | Tablet | ✅ Asistencia con el carnet. ✅ Marca sus operaciones por juego o paquete en la tablet del módulo (también sin internet). |
+| **Satélite** | Panel web (limitado) | Próximo (Fase 6, segunda parte): ver sus remisiones. |
 | Demás roles | Panel web | Ven en el menú sus módulos; se activan en la fase indicada (F2, F3…). |
 
 ## Tablet de entrada (asistencia)
@@ -58,4 +58,13 @@ Nunca desinstale la app ni borre sus datos con registros pendientes: se perderí
 4. Si el aviso de lotes aparece, solo el jefe de corte autoriza con un motivo. Paquetes nunca mezclan lote, color ni talla.
 5. **Instrucciones de mesa** para el cortador → **Confirmar corte** → imprima las etiquetas de los paquetes.
 6. *Piezas y juegos*: arme los juegos (prendas combinadas), mire qué falta recortar, imprima las etiquetas y **Terminar corte**.
+
+## Operario (tablet del módulo)
+
+1. *Marcar operaciones* → escanee su carnet.
+2. Escanee la etiqueta del juego (JG-…) o del paquete (PQ-…). Si es nuevo en el módulo, cuente las prendas y pulse **Recibir**.
+3. Marque sus operaciones (la tablet las recuerda) → **Empezar**.
+4. Toque el contador cada vez que termine una prenda. Si una prenda vuelve para arreglo, pulse **Reproceso** en esa operación.
+5. Si se equivocó, en *últimas marcaciones* pulse la flecha para anular.
+6. Al terminar el juego: **Entregar** con buenas y segundas. El botón del sol cambia el fondo a claro.
 

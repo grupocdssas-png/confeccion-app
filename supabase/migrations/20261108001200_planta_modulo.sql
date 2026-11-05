@@ -312,7 +312,7 @@ begin
     v_min := extract(epoch from new.ocurrido_en_servidor - v_ant) / 60;
     if v_min > 0 and v_min <= v_max then
       new.minutos_reales := round(v_min, 3);
-      new.eficiencia := round(new.minutos_esperados / v_min * 100, 2);
+      new.eficiencia := round(new.minutos_esperados / new.minutos_reales * 100, 2);   -- igual que la tablet: con los minutos ya redondeados
     end if;
   end if;
   return new;

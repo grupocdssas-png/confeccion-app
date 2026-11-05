@@ -49,17 +49,17 @@ streams:
     auto_subscribe: true
     queries:
       - SELECT id, consecutivo, referencia_id, ficha_version_id, estado, proceso_actual, cantidad_total
-        FROM ordenes_produccion WHERE estado IN ('planeada', 'en_proceso')
+        FROM ordenes_produccion WHERE estado != 'terminada' AND estado != 'cerrada' AND estado != 'anulada'
       - SELECT id, codigo, nombre FROM referencias
       - SELECT id, codigo, nombre, unidades_marcacion, permite_cambiar_unidades, sin_talla_color FROM operaciones
       - SELECT id, ficha_id, secuencia, operacion_id, proceso, sam, sam_reproceso, repeticiones, es_contadora, unidades_marcacion,
           permite_cambiar_unidades FROM ficha_operaciones
-        WHERE ficha_id IN (SELECT ficha_version_id FROM ordenes_produccion WHERE estado IN ('planeada', 'en_proceso'))
+        WHERE ficha_id IN (SELECT ficha_version_id FROM ordenes_produccion WHERE estado != 'terminada' AND estado != 'cerrada' AND estado != 'anulada')
       - SELECT id, ficha_id, codigo, nombre FROM ficha_combinaciones
-        WHERE ficha_id IN (SELECT ficha_version_id FROM ordenes_produccion WHERE estado IN ('planeada', 'en_proceso'))
+        WHERE ficha_id IN (SELECT ficha_version_id FROM ordenes_produccion WHERE estado != 'terminada' AND estado != 'cerrada' AND estado != 'anulada')
       - SELECT id, codigo, op_id, color_id, talla_id, lote_tintura, cantidad, cantidad_actual, estado, proceso_actual, celula_id
-        FROM paquetes WHERE completo = true AND estado IN ('cortado', 'en_proceso', 'en_espera')
+        FROM paquetes WHERE completo = true AND estado != 'terminado' AND estado != 'anulado'
       - SELECT id, codigo, op_id, combinacion_id, color_id, talla_id, cantidad, cantidad_actual, estado, proceso_actual, celula_id
-        FROM juegos WHERE estado IN ('armado', 'en_proceso', 'en_espera')
+        FROM juegos WHERE estado != 'terminado' AND estado != 'anulado'
       - SELECT empleado_id || '_' || CAST(fecha AS TEXT) AS id, empleado_id, CAST(fecha AS TEXT) AS fecha, unidades, reprocesos,
           minutos_esperados, minutos_reales FROM eficiencia_diaria

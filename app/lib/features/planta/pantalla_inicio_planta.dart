@@ -27,8 +27,8 @@ class PantallaInicioPlanta extends ConsumerWidget {
         if (e.tipo == 'entrada') return const PantallaAsistenciaPlanta();
         final funciones = <(String, IconData, String?, int)>[
           ('Asistencia', Icons.badge_outlined, '/asistencia', 1),
-          if (e.tipo == 'modulo') ('Marcar operaciones', Icons.touch_app_outlined, null, 6),
-          ('Escanear paquetes', Icons.qr_code_scanner, null, 6),
+          if (e.tipo == 'modulo') ('Marcar operaciones', Icons.touch_app_outlined, '/modulo', 6),
+          if (e.tipo != 'modulo' && e.proceso != null && e.tipo != 'mesa_corte') ('Recibir y entregar paquetes', Icons.qr_code_scanner, '/modulo', 6),
           if (e.tipo == 'mesa_corte') ('Corte en mesa', Icons.content_cut, null, 5),
           if (e.tipo == 'bodega') ('Bodega: rollos, conteos, etiquetas', Icons.inventory_2_outlined, '/bodega', 2),
           if (e.tipo == 'mesa_corte') ('Consultar rollo', Icons.search, '/bodega/rollo', 2),

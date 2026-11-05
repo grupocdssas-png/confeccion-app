@@ -53,6 +53,35 @@ const esquemaLocal = Schema([
   Table('plantillas_etiqueta', [Column.text('tipo'), Column.text('tamano'), Column.text('zpl'), Column.integer('version')]),
   Table('dispositivos', [Column.text('estacion_id'), Column.text('nombre'), Column.text('tipo')]),
 
+  // --- Producción para la tablet del módulo (Fase 6) ---
+  Table('ordenes_produccion', [
+    Column.text('consecutivo'), Column.text('referencia_id'), Column.text('ficha_version_id'), Column.text('estado'),
+    Column.text('proceso_actual'), Column.integer('cantidad_total'),
+  ]),
+  Table('referencias', [Column.text('codigo'), Column.text('nombre')]),
+  Table('operaciones', [
+    Column.text('codigo'), Column.text('nombre'), Column.integer('unidades_marcacion'), Column.integer('permite_cambiar_unidades'),
+    Column.integer('sin_talla_color'),
+  ]),
+  Table('ficha_operaciones', [
+    Column.text('ficha_id'), Column.integer('secuencia'), Column.text('operacion_id'), Column.text('proceso'), Column.real('sam'),
+    Column.real('sam_reproceso'), Column.real('repeticiones'), Column.integer('es_contadora'), Column.integer('unidades_marcacion'),
+    Column.integer('permite_cambiar_unidades'),
+  ], indexes: [Index('fo_ficha', [IndexedColumn('ficha_id'), IndexedColumn('proceso')])]),
+  Table('ficha_combinaciones', [Column.text('ficha_id'), Column.text('codigo'), Column.text('nombre')]),
+  Table('paquetes', [
+    Column.text('codigo'), Column.text('op_id'), Column.text('color_id'), Column.text('talla_id'), Column.text('lote_tintura'),
+    Column.integer('cantidad'), Column.integer('cantidad_actual'), Column.text('estado'), Column.text('proceso_actual'), Column.text('celula_id'),
+  ], indexes: [Index('paquete_codigo', [IndexedColumn('codigo')])]),
+  Table('juegos', [
+    Column.text('codigo'), Column.text('op_id'), Column.text('combinacion_id'), Column.text('color_id'), Column.text('talla_id'),
+    Column.integer('cantidad'), Column.integer('cantidad_actual'), Column.text('estado'), Column.text('proceso_actual'), Column.text('celula_id'),
+  ], indexes: [Index('juego_codigo', [IndexedColumn('codigo')])]),
+  Table('eficiencia_diaria', [
+    Column.text('empleado_id'), Column.text('fecha'), Column.integer('unidades'), Column.integer('reprocesos'),
+    Column.real('minutos_esperados'), Column.real('minutos_reales'),
+  ], indexes: [Index('ef_empleado', [IndexedColumn('empleado_id'), IndexedColumn('fecha')])]),
+
   // --- Eventos que suben (solo se agregan) ---
   Table.insertOnly('asistencia_marcas', [
     Column.text('empleado_id'), Column.text('tipo'), Column.text('anula_id'), Column.text('motivo'), Column.text('ocurrido_en'),
@@ -69,6 +98,15 @@ const esquemaLocal = Schema([
     Column.text('impresora_id'), Column.text('plantilla_id'), Column.integer('plantilla_version'), Column.text('entidad'),
     Column.text('entidad_id'), Column.text('codigo'), Column.text('medio'), Column.integer('es_reimpresion'),
     Column.text('motivo'), Column.text('estado_final'), Column.integer('intentos'), Column.text('ocurrido_en'),
+  ]),
+
+  Table.insertOnly('marcaciones', [
+    Column.text('empleado_id'), Column.text('unidad_id'), Column.text('ficha_operacion_id'), Column.integer('unidades'),
+    Column.text('tipo'), Column.text('anula_id'), Column.text('motivo'), Column.text('ocurrido_en'),
+  ]),
+  Table.insertOnly('eventos_unidad', [
+    Column.text('unidad_id'), Column.text('tipo'), Column.integer('buenas'), Column.integer('segundas'), Column.integer('faltantes'),
+    Column.text('empleado_id'), Column.text('observacion'), Column.text('ocurrido_en'),
   ]),
 
   // --- Solo locales ---

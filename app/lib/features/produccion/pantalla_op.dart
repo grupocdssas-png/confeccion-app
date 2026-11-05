@@ -13,17 +13,20 @@ import '../../core/tema/tema.dart';
 import '../inventario/comun_inventario.dart' show db, Tabla, mensajeError, avisar, pedirTexto;
 import 'comun_produccion.dart';
 import 'op_pdf.dart';
+import 'unidades_op.dart';
 
 final opDetalleProvider = FutureProvider.autoDispose.family<Map<String, dynamic>, String>((ref, id) async {
   final op = await db.from('ordenes_produccion').select('*, referencias(codigo, nombre), ficha_versiones(id, version), '
       'op_cantidades(cantidad, ficha_combinaciones(codigo, nombre, orden), tallas(codigo, orden)), '
       'op_procesos(*), op_necesidades(*, materiales(codigo, nombre, unidad, tipo), colores(nombre)), '
       'op_pedidos(cantidad, pedido_lineas(pedido_id, pedidos(consecutivo)))').eq('id', id).single();
-  final eventos = await db.from('eventos_proceso').select('*, perfiles:usuario_id(nombre), satelites(nombre)')
-      .eq('op_id', id).order('ocurrido_en', ascending: false);
+  // Historial: avances (las recepciones de cada paquete o juego se ven en "Paquetes y juegos")
+  final eventos = await db.from('eventos_proceso').select('*, perfiles:usuario_id(nombre), satelites(nombre), paquetes(codigo), juegos!eventos_proceso_juego_id_fkey(codigo), '
+      'estaciones(codigo)').eq('op_id', id).neq('tipo', 'recepcion').order('ocurrido_en', ascending: false).limit(200);
+  final unidades = await db.from('unidades_trabajo').select('id').eq('op_id', id).limit(1);
   final req = await db.from('requisiciones').select('*, requisicion_lineas(*, materiales(nombre, unidad), colores(nombre), '
       'oc_lineas(cantidad_recibida, ordenes_compra(consecutivo, estado)))').eq('op_id', id).order('creado_en', ascending: false);
-  return {...op, 'eventos': eventos, 'requisiciones': req};
+  return {...op, 'eventos': eventos, 'requisiciones': req, 'hay_unidades': unidades.isNotEmpty};
 });
 
 class PantallaOp extends ConsumerWidget {
@@ -140,7 +143,9 @@ class PantallaOp extends ConsumerWidget {
                 for (final (i, p) in procesos.indexed)
                   _Proceso(p: p, actual: o['proceso_actual'] == p['proceso'],
                       // solo donde puede entrar algo: el primero o si el anterior ya entregó prendas buenas
+                      // con paquetes o juegos el avance después de corte se registra por unidad (tablet o "Paquetes y juegos")
                       onAvance: editar && (planeada || o['estado'] == 'en_proceso') && p['estado'] != 'terminado'
+                              && !(o['hay_unidades'] == true && p['proceso'] != 'corte')
                               && (i == 0 || (procesos[i - 1]['buenas'] as int) > (p['entra'] as int))
                           ? () async {
                               final ok = await showDialog<bool>(context: context, builder: (_) => _DialogoAvance(op: o, proceso: p));
@@ -151,22 +156,25 @@ class PantallaOp extends ConsumerWidget {
               const SizedBox(height: 14),
               Text('Historial de avances', style: estilo(13, peso: FontWeight.w600, color: Colores.textoSuave)),
               Tabla(
-                columnas: const ['Fecha', 'Proceso', 'Entra', 'Buenas', 'Segundas', 'Faltantes', 'Responsable', 'Observación'],
-                numericas: const {2, 3, 4, 5},
+                columnas: const ['Fecha', 'Proceso', 'Paquete / juego', 'Entra', 'Buenas', 'Segundas', 'Faltantes', 'Responsable', 'Observación'],
+                numericas: const {3, 4, 5, 6},
                 vacio: 'Sin avances todavía.',
                 filas: [
                   for (final e in o['eventos'] as List)
                     DataRow(cells: [
                       DataCell(Text(Formato.fechaHora(DateTime.parse(e['ocurrido_en'])))),
                       DataCell(Pastilla(Colores.nombreProceso(e['proceso']), color: Colores.deProceso(e['proceso']))),
+                      DataCell(Text('${e['paquetes']?['codigo'] ?? e['juegos']?['codigo'] ?? '—'}${e['tipo'] == 'anulacion' ? ' (anulación)' : ''}', style: estiloCodigo(12.5))),
                       DataCell(Text('${e['entra']}')), DataCell(Text('${e['buenas']}')), DataCell(Text('${e['segundas']}')), DataCell(Text('${e['faltantes']}')),
-                      DataCell(Text('${e['satelites']?['nombre'] ?? e['perfiles']?['nombre'] ?? ''}${e['termina'] == true ? ' · terminó' : ''}')),
+                      DataCell(Text('${e['satelites']?['nombre'] ?? e['estaciones']?['codigo'] ?? e['perfiles']?['nombre'] ?? ''}${e['termina'] == true ? ' · terminó' : ''}')),
                       DataCell(Text('${e['observacion'] ?? ''}')),
                     ]),
                 ],
               ),
             ]),
           ),
+          const SizedBox(height: 16),
+          UnidadesOp(opId: id, editar: editar, onCambio: () => ref.invalidate(opDetalleProvider(id))),
           const SizedBox(height: 16),
           // ---- Materiales ----
           Tarjeta(

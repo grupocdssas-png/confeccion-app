@@ -7,7 +7,8 @@ materiales, corte, costos e inventarios.
 - **Panel web** (oficina, responsive) y, desde la Fase 8, **tableros de TV**.
 - **Servidor**: Supabase (PostgreSQL, Auth, RLS, Storage, Realtime) + **PowerSync** para la sincronización.
 
-> Estado: **Fase 5 terminada** (corte: tendidos normales y por espigas, paquetes, juegos). Ver [`docs/fase-5/FASE_5.md`](docs/fase-5/FASE_5.md),
+> Estado: **Fase 6 (primera parte) terminada** (tablet del módulo, recorrido de paquetes y juegos). Ver [`docs/fase-6/FASE_6.md`](docs/fase-6/FASE_6.md),
+> [`docs/fase-5/FASE_5.md`](docs/fase-5/FASE_5.md),
 > [`docs/fase-4/FASE_4.md`](docs/fase-4/FASE_4.md),
 > [`docs/fase-3/FASE_3.md`](docs/fase-3/FASE_3.md),
 > [`docs/fase-2/FASE_2.md`](docs/fase-2/FASE_2.md),
@@ -31,7 +32,14 @@ herramientas/            scripts: crear usuarios de ejemplo, probar la base
 docs/                    propuesta, esquema, guías
 ```
 
-## 1. Instalar en su computador (VS Code)
+## 0. Sin instalar nada: compilación en GitHub
+
+Cada vez que se sube código a <https://github.com/grupocdssas-png/confeccion-app>, GitHub corre las pruebas y genera el
+**APK de las tablets** y el **panel web**: pestaña **Actions** → la última ejecución verde → sección **Artifacts**
+(`apk-tablets`, `panel-web`). Para que apunten a su Supabase y PowerSync, una sola vez en *Settings → Secrets and variables →
+Actions* cree `SUPABASE_URL`, `SUPABASE_ANON_KEY` y `POWERSYNC_URL` (son públicas; las claves secretas nunca van ahí).
+
+## 1. Instalar en su computador (VS Code, opcional)
 
 1. Instale **Flutter** (canal estable actual; el proyecto usa Dart 3.13 o superior): <https://docs.flutter.dev/get-started/install>.
    Para el APK necesita además **Android Studio** (trae el SDK de Android).
