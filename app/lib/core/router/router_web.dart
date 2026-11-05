@@ -9,6 +9,8 @@ import '../../features/configuracion/pantalla_etiquetas.dart';
 import '../../features/balanceo/pantalla_balanceo.dart';
 import '../../features/calidad/pantalla_calidad_web.dart';
 import '../../features/corte/pantalla_corte.dart';
+import '../../features/costos/pantalla_costos.dart';
+import '../../features/dashboard/pantalla_dashboard.dart';
 import '../../features/eficiencia/pantalla_eficiencia.dart';
 import '../../features/corte/pantalla_cortes.dart';
 import '../../features/corte/pantalla_juegos.dart';
@@ -28,11 +30,13 @@ import '../../features/inventario/pantalla_producto.dart';
 import '../../features/inventario/pantalla_insumos_kardex.dart';
 import '../../features/inventario/pantalla_materiales_ubicaciones.dart';
 import '../../features/inventario/pantalla_telas.dart';
+import '../../features/informes/pantalla_informes.dart';
 import '../../features/inicio/pantalla_inicio_web.dart';
 import '../../features/personal/pantalla_personal.dart';
 import '../../features/programacion/pantalla_programacion.dart';
 import '../../features/shell_web/shell_web.dart';
 import '../../features/terminacion/pantalla_terminacion.dart';
+import '../../features/trazabilidad/pantalla_trazabilidad.dart';
 import '../../features/tv/pantalla_tv.dart';
 import '../auth/sesion.dart';
 
@@ -71,7 +75,12 @@ final routerWebProvider = Provider<GoRouter>((ref) {
       ShellRoute(
         builder: (_, _, child) => ShellWeb(child: child),
         routes: [
-          GoRoute(path: '/', builder: (_, _) => const PaginaWeb(child: PantallaInicioWeb())), // inicio: todos los usuarios
+          // inicio: el dashboard para quien lo tiene; los demás, su página de inicio
+          GoRoute(path: '/', builder: (_, _) => PaginaWeb(child: Consumer(builder: (_, ref, _) =>
+              (ref.watch(sesionProvider).value?.puedeVer('dashboard') ?? false) ? const PantallaDashboard() : const PantallaInicioWeb()))),
+          GoRoute(path: '/costos', builder: (_, _) => protegida('/costos', const PantallaCostos())),
+          GoRoute(path: '/trazabilidad', builder: (_, s) => protegida('/trazabilidad', PantallaTrazabilidad(key: ValueKey(s.uri.toString()), codigo: s.uri.queryParameters['c']))),
+          GoRoute(path: '/informes', builder: (_, s) => protegida('/informes', PantallaInformes(key: ValueKey(s.uri.queryParameters['i']), inicial: s.uri.queryParameters['i']))),
           GoRoute(path: '/personal', builder: (_, _) => protegida('/personal', const PantallaPersonal())),
           GoRoute(path: '/asistencia', builder: (_, _) => protegida('/asistencia', const PantallaAsistenciaWeb())),
           GoRoute(path: '/configuracion', builder: (_, _) => protegida('/configuracion', const PantallaConfiguracion())),

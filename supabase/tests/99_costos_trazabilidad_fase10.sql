@@ -130,9 +130,9 @@ select pg_temp.falla($$select pg_temp.como('aaaaaaaa-0000-0000-0000-000000000005
 -- ---------- 4. Dashboard ----------
 select pg_temp.como('aaaaaaaa-0000-0000-0000-000000000002', $$create temp table db as select dashboard() d$$);
 select pg_temp.ok((select jsonb_array_length(d->'procesos') >= 7 and (d->'indicadores'->>'ops_activas')::int >= 1
-                     and exists (select 1 from jsonb_array_elements(d->'ops') o where o->>'consecutivo' = (select consecutivo from k) and o->'avance' ? 'confeccion')
+                     and exists (select 1 from jsonb_array_elements(d->'ops') o where o->>'consecutivo' = (select consecutivo from k) and (o->>'prendas')::int > 0)
                      and (d->'indicadores'->>'alertas')::int >= 1 from db),
-                  'Dashboard: procesos, OP activas con su avance por proceso e indicadores');
+                  'Dashboard: procesos, OP activas en cada proceso donde tienen prendas, e indicadores');
 select pg_temp.falla($$select pg_temp.como('aaaaaaaa-0000-0000-0000-000000000005', 'select dashboard()')$$, 'El satélite no ve el dashboard');
 
 -- ---------- 5. Informes ----------

@@ -113,3 +113,20 @@ satélite con su Excel, defectos más frecuentes, catálogo de defectos y plan d
 3. *Inventarios → Producto terminado*: existencias por color y talla; toque una casilla para ver sus movimientos, **ajustar** o
    pasar a segundas.
 4. *Inventarios → Despachos → Nuevo despacho*: pedido → cantidades → **Despachar**; imprima la remisión en PDF.
+
+## Gerencia y Costos
+
+1. El inicio es el **Dashboard**: indicadores y el Kanban de OP por proceso (toque una OP para ver su detalle).
+2. *Costos*: costo real vs estándar de cada OP; *Detalle* muestra tela, insumos, satélites, mano de obra e indirectos.
+3. *Informes*: elija el informe y las fechas; **Excel (CSV)** o **PDF**.
+
+## Bodega: insumos para la OP
+
+En el detalle de la OP → **Despachar insumos** (bodega, cantidades) → *Despachar*. Lo que sobre: **Devolver sobrantes** con motivo.
+
+## Trazabilidad (Calidad, Producción, Bodega)
+
+*Trazabilidad* → escanee o escriba el código del paquete, juego, rollo, OP, despacho, etiqueta de prenda o el lote de tintura.
+Para un reclamo: con la etiqueta de la prenda salen los despachos y los paquetes posibles; con la etiqueta del paquete, el
+recorrido exacto (tela, cortador, satélite, operarios, calidad).
+

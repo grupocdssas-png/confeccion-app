@@ -48,6 +48,9 @@ begin
       insert into movimientos_inventario (tipo, afecta, material_id, color_id, bodega_id, cantidad, op_id, documento_tipo, documento_id)
       values ('liberacion', 'reservado', x.material_id, x.color_id, x.bodega_id, -least(v_res, x.cantidad), o.id, 'salida_op', v_doc);
     end if;
+    update op_necesidades n set consumido = n.consumido + x.cantidad,
+           reservado = (select coalesce(sum(rv.reservado), 0) from reservado_op(o.id) rv where rv.material_id = x.material_id and rv.color_id is not distinct from x.color_id)
+     where n.op_id = o.id and n.material_id = x.material_id and n.color_id is not distinct from x.color_id;
   end loop;
   return v_doc;
 end $$;
@@ -78,6 +81,8 @@ begin
     end if;
     insert into movimientos_inventario (tipo, material_id, color_id, bodega_id, cantidad, costo_unitario, op_id, documento_tipo, documento_id, motivo)
     values ('devolucion', x.material_id, x.color_id, x.bodega_id, x.cantidad, v_costo, o.id, 'salida_op', v_doc, trim(p_motivo));
+    update op_necesidades n set consumido = greatest(n.consumido - x.cantidad, 0)
+     where n.op_id = o.id and n.material_id = x.material_id and n.color_id is not distinct from x.color_id;
   end loop;
   return v_doc;
 end $$;
@@ -208,7 +213,9 @@ begin
          (t.detalle->>'prendas_base')::numeric, (t.detalle->>'prendas_buenas')::numeric, t.estandar, t.valor_real,
          case when t.estandar > 0 then round((t.valor_real - t.estandar) / t.estandar * 100, 1) end,
          case when (t.detalle->>'prendas_base')::numeric > 0 then round(t.estandar / (t.detalle->>'prendas_base')::numeric, 0) end,
-         case when coalesce((t.detalle->>'prendas_buenas')::numeric, 0) > 0 then round(t.valor_real / (t.detalle->>'prendas_buenas')::numeric, 0)
+         -- por prenda terminada solo cuando la OP terminó; mientras tanto, por prenda cortada
+         case when o.estado in ('terminada','cerrada') and coalesce((t.detalle->>'prendas_buenas')::numeric, 0) > 0
+                then round(t.valor_real / (t.detalle->>'prendas_buenas')::numeric, 0)
               when (t.detalle->>'prendas_base')::numeric > 0 then round(t.valor_real / (t.detalle->>'prendas_base')::numeric, 0) end,
          (select desviacion_pct from costo_op_detalle(o.id) d where d.concepto = 'tela'),
          (select desviacion_pct from costo_op_detalle(o.id) d where d.concepto = 'mano_obra')
@@ -241,7 +248,8 @@ language sql stable security definer set search_path = public as $$
     'op', (select jsonb_build_object('id', o.id, 'consecutivo', o.consecutivo, 'referencia', r.codigo || ' ' || r.nombre)
            from ordenes_produccion o join referencias r on r.id = o.referencia_id where o.id = u.op_id),
     'corte', (select coalesce(jsonb_agg(distinct jsonb_build_object('consecutivo', c.consecutivo, 'fecha', c.confirmado_en,
-                       'cortador', (select e.nombres || ' ' || e.apellidos from empleados e where e.id = c.cortador_id),
+                       'cortador', coalesce((select e.nombres || ' ' || e.apellidos from empleados e where e.id = c.cortador_id),
+                                            (select pf.nombre from perfiles pf where pf.id = c.confirmado_por)),
                        'paquete', p.codigo, 'lote_tintura', p.lote_tintura, 'color', co.nombre)), '[]')
               from paq p join cortes c on c.id = p.corte_id left join colores co on co.id = p.color_id),
     'rollos', (select coalesce(jsonb_agg(distinct jsonb_build_object('codigo', ro.codigo, 'material', m.nombre, 'lote_tintura', ro.lote_tintura,
@@ -252,7 +260,8 @@ language sql stable security definer set search_path = public as $$
     'procesos', (select coalesce(jsonb_agg(jsonb_build_object('proceso', pr.nombre, 'tipo', e.tipo, 'fecha', coalesce(e.ocurrido_en_servidor, e.ocurrido_en),
                         'entra', e.entra, 'buenas', e.buenas, 'segundas', e.segundas, 'faltantes', e.faltantes,
                         'celula', ce.codigo, 'satelite', sa.nombre,
-                        'empleado', (select em.nombres || ' ' || em.apellidos from empleados em where em.id = e.empleado_id))
+                        'empleado', coalesce((select em.nombres || ' ' || em.apellidos from empleados em where em.id = e.empleado_id),
+                                             (select pf.nombre from perfiles pf where pf.id = e.usuario_id)))
                         order by coalesce(e.ocurrido_en_servidor, e.ocurrido_en)), '[]')
                  from eventos_proceso e join procesos pr on pr.codigo = e.proceso left join celulas ce on ce.id = e.celula_id
                  left join satelites sa on sa.id = e.satelite_id
@@ -390,17 +399,30 @@ begin
     'hoy', v_hoy,
     'procesos', (select coalesce(jsonb_agg(jsonb_build_object('codigo', codigo, 'nombre', nombre, 'color', color_hex) order by orden), '[]')
                  from procesos where codigo <> 'diseno'),
+    -- Kanban: la OP aparece en cada proceso donde tiene prendas (las que aún no se cortan, en corte)
     'ops', (select coalesce(jsonb_agg(jsonb_build_object(
               'id', o.id, 'consecutivo', o.consecutivo, 'referencia', r.codigo, 'nombre', r.nombre, 'estado', o.estado,
-              'proceso', o.proceso_actual, 'cantidad', o.cantidad_total, 'prioridad', o.prioridad,
+              'proceso', k.proceso, 'prendas', k.prendas, 'en_proceso', k.en_proceso, 'esperando', k.esperando, 'en_satelite', k.en_satelite,
+              'cantidad', o.cantidad_total, 'prioridad', o.prioridad,
               'entrega', coalesce(o.fecha_comprometida, o.fecha_entrega_plan), 'alerta_material', o.alerta_material,
               'atrasada', coalesce(o.fecha_comprometida, o.fecha_entrega_plan) < v_hoy,
               'en_riesgo', (select max(p.fin_plan) from programacion p where p.op_id = o.id) > coalesce(o.fecha_comprometida, o.fecha_entrega_plan),
-              'avance', (select jsonb_object_agg(op.proceso, jsonb_build_object('buenas', op.buenas, 'estado', op.estado)) from op_procesos op where op.op_id = o.id),
               'terminadas', (select coalesce(sum(cantidad), 0) from movimientos_producto where op_id = o.id and tipo = 'ingreso_op'),
-              'devoluciones', (select count(*) from devoluciones_calidad where op_id = o.id and estado = 'abierta'))
+              'devoluciones', (select count(*) from devoluciones_calidad d where d.op_id = o.id and d.estado = 'abierta'))
               order by o.prioridad nulls last, coalesce(o.fecha_comprometida, o.fecha_entrega_plan) nulls last, o.consecutivo), '[]')
-            from ordenes_produccion o join referencias r on r.id = o.referencia_id where o.estado in ('planeada','en_proceso')),
+            from ordenes_produccion o join referencias r on r.id = o.referencia_id
+            cross join lateral (
+              select u.proceso_actual as proceso, sum(u.cantidad_actual)::int as prendas,
+                     count(*) filter (where u.estado = 'en_proceso')::int as en_proceso,
+                     count(*) filter (where u.estado in ('en_espera','armado','cortado'))::int as esperando,
+                     count(*) filter (where u.estado = 'en_proceso' and exists (
+                       select 1 from eventos_proceso e where (e.paquete_id = u.id or e.juego_id = u.id) and e.tipo = 'recepcion'
+                         and e.proceso = u.proceso_actual and e.satelite_id is not null))::int as en_satelite
+              from unidades_trabajo u where u.op_id = o.id and u.estado not in ('terminado','anulado') group by 1
+              union all
+              select 'corte', o.cantidad_total, 0, 0, 0 where not exists (select 1 from unidades_trabajo u where u.op_id = o.id)
+            ) k
+            where o.estado in ('planeada','en_proceso')),
     'indicadores', jsonb_build_object(
       'ops_activas', (select count(*) from ordenes_produccion where estado in ('planeada','en_proceso')),
       'ops_atrasadas', (select count(*) from ordenes_produccion where estado in ('planeada','en_proceso')

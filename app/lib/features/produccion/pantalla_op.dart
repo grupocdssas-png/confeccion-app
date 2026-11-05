@@ -10,6 +10,7 @@ import '../../core/auth/sesion.dart';
 import '../../core/formato/formato.dart';
 import '../../core/tema/colores.dart';
 import '../../core/tema/tema.dart';
+import '../costos/pantalla_costos.dart' show TablaCostoOp;
 import '../inventario/comun_inventario.dart' show db, Tabla, mensajeError, avisar, pedirTexto;
 import 'comun_produccion.dart';
 import 'op_pdf.dart';
@@ -36,7 +37,11 @@ class PantallaOp extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final datos = ref.watch(opDetalleProvider(id));
-    final editar = ref.watch(sesionProvider).value?.puedeEditar('op') ?? false;
+    final sesion = ref.watch(sesionProvider).value;
+    final editar = sesion?.puedeEditar('op') ?? false;
+    final verCostos = sesion?.puedeVer('costos') ?? false;
+    final despacharInsumos = sesion?.puedeEditar('inventario') ?? false;
+    final verTraza = sesion?.puedeVer('trazabilidad') ?? false;
     return datos.when(
       loading: () => const LinearProgressIndicator(),
       error: (e, _) => Text(mensajeError(e), style: estilo(14, color: Colores.rojo)),
@@ -74,6 +79,8 @@ class PantallaOp extends ConsumerWidget {
                 OutlinedButton(onPressed: () => context.go('/op'), child: const Text('Volver')),
                 OutlinedButton.icon(onPressed: () => _imprimir(context, o, matriz, tallasOrd), icon: const Icon(Icons.print_outlined), label: const Text('Hoja de secuencia y máquinas')),
                 OutlinedButton(onPressed: () => context.go('/fichas/${o['ficha_versiones']['id']}'), child: const Text('Ver ficha')),
+                if (verTraza)
+                  OutlinedButton.icon(onPressed: () => context.go('/trazabilidad?c=${o['consecutivo']}'), icon: const Icon(Icons.account_tree_outlined), label: const Text('Trazabilidad')),
                 if (editar && (o['estado'] == 'planeada' || o['estado'] == 'en_proceso'))
                   OutlinedButton.icon(onPressed: () => accion(() => db.rpc('reservar_op', params: {'p_op': id}), 'Necesidades y reservas recalculadas'),
                       icon: const Icon(Icons.refresh), label: const Text('Recalcular reservas')),
@@ -177,8 +184,39 @@ class PantallaOp extends ConsumerWidget {
           UnidadesOp(opId: id, editar: editar, onCambio: () => ref.invalidate(opDetalleProvider(id))),
           const SizedBox(height: 16),
           // ---- Materiales ----
+          if (verCostos) ...[
+            Tarjeta(
+              titulo: 'Costo real vs estándar',
+              child: FutureBuilder<List<dynamic>>(
+                future: db.rpc('costo_op_detalle', params: {'p_op': id}).then((v) => v as List),
+                builder: (_, s) => s.hasError
+                    ? Text(mensajeError(s.error!), style: estilo(14, color: Colores.rojo))
+                    : !s.hasData
+                        ? const LinearProgressIndicator()
+                        : TablaCostoOp(filas: s.data!.cast<Map<String, dynamic>>()),
+              ),
+            ),
+            const SizedBox(height: 16),
+          ],
           Tarjeta(
             titulo: 'Materiales: estándar, reservado y faltante',
+            accion: despacharInsumos && (o['estado'] == 'planeada' || o['estado'] == 'en_proceso')
+                ? Wrap(spacing: 8, children: [
+                    OutlinedButton.icon(
+                        onPressed: () async {
+                          final ok = await showDialog<bool>(context: context, builder: (_) => _InsumosOp(op: o, devolver: false));
+                          if (ok == true) ref.invalidate(opDetalleProvider(id));
+                        },
+                        icon: const Icon(Icons.outbox_outlined),
+                        label: const Text('Despachar insumos')),
+                    TextButton(
+                        onPressed: () async {
+                          final ok = await showDialog<bool>(context: context, builder: (_) => _InsumosOp(op: o, devolver: true));
+                          if (ok == true) ref.invalidate(opDetalleProvider(id));
+                        },
+                        child: const Text('Devolver sobrantes')),
+                  ])
+                : null,
             child: Tabla(
               columnas: const ['Material', 'Color', 'Estándar', 'Reservado', 'Faltante', 'Consumido real', 'Unidad'],
               numericas: const {2, 3, 4, 5},
@@ -355,6 +393,134 @@ class _DialogoCantidadesState extends State<_DialogoCantidades> {
         actions: [
           TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancelar')),
           FilledButton(onPressed: () => Navigator.pop(context, _v), child: const Text('Guardar')),
+        ],
+      );
+}
+
+/// Despacho (o devolución) de insumos a la OP: una línea por insumo de la ficha
+class _InsumosOp extends StatefulWidget {
+  const _InsumosOp({required this.op, required this.devolver});
+  final Map<String, dynamic> op;
+  final bool devolver;
+  @override
+  State<_InsumosOp> createState() => _InsumosOpState();
+}
+
+class _InsumosOpState extends State<_InsumosOp> {
+  List<Map<String, dynamic>> _bodegas = [];
+  String? _bodega;
+  Map<String, num> _hay = {};
+  final _cant = <String, TextEditingController>{};
+  final _motivo = TextEditingController();
+  var _ocupado = false;
+
+  List<Map<String, dynamic>> get _lineas => [
+        for (final n in (widget.op['op_necesidades'] as List).cast<Map<String, dynamic>>())
+          if (n['materiales']['tipo'] == 'insumo') n,
+      ];
+  String _k(Map<String, dynamic> n) => '${n['material_id']}_${n['color_id']}';
+
+  @override
+  void initState() {
+    super.initState();
+    for (final n in _lineas) {
+      final pend = ((n['cantidad_estandar'] as num) - (n['consumido'] as num));
+      _cant[_k(n)] = TextEditingController(text: widget.devolver ? '0' : Formato.numero(pend < 0 ? 0 : pend, decimales: 2).replaceAll('.', ''));
+    }
+    db.from('bodegas').select('id, codigo, nombre').eq('tipo', 'insumos').eq('activo', true).order('codigo', ascending: true).then((b) {
+      if (!mounted) return;
+      setState(() {
+        _bodegas = b.cast<Map<String, dynamic>>();
+        _bodega = _bodegas.firstOrNull?['id'];
+      });
+      _cargarHay();
+    });
+  }
+
+  Future<void> _cargarHay() async {
+    if (_bodega == null) return;
+    final s = await db.from('saldos_por_material').select('material_id, color_id, fisico').eq('bodega_id', _bodega!)
+        .inFilter('material_id', [for (final n in _lineas) n['material_id']]);
+    if (mounted) setState(() => _hay = {for (final x in s) '${x['material_id']}_${x['color_id']}': (x['fisico'] ?? 0) as num});
+  }
+
+  @override
+  void dispose() {
+    for (final c in _cant.values) {
+      c.dispose();
+    }
+    _motivo.dispose();
+    super.dispose();
+  }
+
+  num _num(String t) => num.tryParse(t.trim().replaceAll('.', '').replaceAll(',', '.')) ?? 0;
+
+  @override
+  Widget build(BuildContext context) => AlertDialog(
+        title: Text(widget.devolver ? 'Devolver insumos de ${widget.op['consecutivo']}' : 'Despachar insumos a ${widget.op['consecutivo']}'),
+        content: SizedBox(
+          width: 680,
+          child: SingleChildScrollView(
+            child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+              DropdownButtonFormField<String>(
+                initialValue: _bodega,
+                decoration: const InputDecoration(labelText: 'Bodega'),
+                items: [for (final b in _bodegas) DropdownMenuItem(value: b['id'] as String, child: Text('${b['codigo']} · ${b['nombre']}'))],
+                onChanged: (v) {
+                  setState(() => _bodega = v);
+                  _cargarHay();
+                },
+              ),
+              const SizedBox(height: 10),
+              if (_lineas.isEmpty) Text('La ficha de esta OP no tiene insumos.', style: estilo(14, color: Colores.textoSuave)),
+              if (_lineas.isNotEmpty)
+                Tabla(
+                  columnas: const ['Insumo', 'Color', 'Estándar', 'Ya salió', 'En bodega', 'Cantidad'],
+                  numericas: const {2, 3, 4},
+                  filas: [
+                    for (final n in _lineas)
+                      DataRow(cells: [
+                        DataCell(Text('${n['materiales']['nombre']}')),
+                        DataCell(Text('${n['colores']?['nombre'] ?? '—'}')),
+                        DataCell(Text(Formato.numero(n['cantidad_estandar'], decimales: 2))),
+                        DataCell(Text(Formato.numero(n['consumido'], decimales: 2))),
+                        DataCell(Text(Formato.numero(_hay[_k(n)] ?? 0, decimales: 2))),
+                        DataCell(SizedBox(width: 90, child: TextField(controller: _cant[_k(n)], keyboardType: const TextInputType.numberWithOptions(decimal: true)))),
+                      ]),
+                  ],
+                ),
+              if (widget.devolver) TextField(controller: _motivo, decoration: const InputDecoration(labelText: 'Motivo (ej. sobró al terminar)')),
+            ]),
+          ),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancelar')),
+          FilledButton(
+            onPressed: _bodega == null || _ocupado
+                ? null
+                : () async {
+                    final lineas = [
+                      for (final n in _lineas)
+                        if (_num(_cant[_k(n)]!.text) > 0)
+                          {'material_id': n['material_id'], 'color_id': n['color_id'], 'bodega_id': _bodega, 'cantidad': _num(_cant[_k(n)]!.text)},
+                    ];
+                    if (lineas.isEmpty) return;
+                    setState(() => _ocupado = true);
+                    try {
+                      final doc = widget.devolver
+                          ? await db.rpc('devolver_insumos_op', params: {'p_op': widget.op['id'], 'p_lineas': lineas, 'p_motivo': _motivo.text})
+                          : await db.rpc('despachar_insumos_op', params: {'p_op': widget.op['id'], 'p_lineas': lineas});
+                      if (context.mounted) {
+                        avisar(context, '${widget.devolver ? 'Devolución' : 'Despacho'} $doc registrado');
+                        Navigator.pop(context, true);
+                      }
+                    } catch (e) {
+                      if (context.mounted) avisar(context, mensajeError(e), error: true);
+                      setState(() => _ocupado = false);
+                    }
+                  },
+            child: Text(widget.devolver ? 'Devolver' : 'Despachar'),
+          ),
         ],
       );
 }
