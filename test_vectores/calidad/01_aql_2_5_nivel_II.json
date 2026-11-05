@@ -1,0 +1,155 @@
+{
+ "descripcion": "ISO 2859-1, inspección normal, nivel II, AQL 2,5 (plan por defecto). Lo prueban la app y el servidor.",
+ "plan": [
+  {
+   "desde": 1,
+   "hasta": 1,
+   "muestra": 1,
+   "acepta": 0
+  },
+  {
+   "desde": 2,
+   "hasta": 50,
+   "muestra": 5,
+   "acepta": 0
+  },
+  {
+   "desde": 51,
+   "hasta": 150,
+   "muestra": 20,
+   "acepta": 1
+  },
+  {
+   "desde": 151,
+   "hasta": 280,
+   "muestra": 32,
+   "acepta": 2
+  },
+  {
+   "desde": 281,
+   "hasta": 500,
+   "muestra": 50,
+   "acepta": 3
+  },
+  {
+   "desde": 501,
+   "hasta": 1200,
+   "muestra": 80,
+   "acepta": 5
+  },
+  {
+   "desde": 1201,
+   "hasta": 3200,
+   "muestra": 125,
+   "acepta": 7
+  },
+  {
+   "desde": 3201,
+   "hasta": 10000,
+   "muestra": 200,
+   "acepta": 10
+  },
+  {
+   "desde": 10001,
+   "hasta": 35000,
+   "muestra": 315,
+   "acepta": 14
+  },
+  {
+   "desde": 35001,
+   "hasta": null,
+   "muestra": 500,
+   "acepta": 21
+  }
+ ],
+ "casos": [
+  {
+   "nombre": "lote de 1 prenda",
+   "lote": 1,
+   "defectuosas": 0,
+   "muestra": 1,
+   "acepta": 0,
+   "resultado": "aprobado"
+  },
+  {
+   "nombre": "paquete de 3: se revisa todo",
+   "lote": 3,
+   "defectuosas": 0,
+   "muestra": 3,
+   "acepta": 0,
+   "resultado": "aprobado"
+  },
+  {
+   "nombre": "paquete de 20 sin defectos",
+   "lote": 20,
+   "defectuosas": 0,
+   "muestra": 5,
+   "acepta": 0,
+   "resultado": "aprobado"
+  },
+  {
+   "nombre": "paquete de 20 con una prenda mala",
+   "lote": 20,
+   "defectuosas": 1,
+   "muestra": 5,
+   "acepta": 0,
+   "resultado": "rechazado"
+  },
+  {
+   "nombre": "lote de 50 (límite)",
+   "lote": 50,
+   "defectuosas": 0,
+   "muestra": 5,
+   "acepta": 0,
+   "resultado": "aprobado"
+  },
+  {
+   "nombre": "lote de 51",
+   "lote": 51,
+   "defectuosas": 1,
+   "muestra": 20,
+   "acepta": 1,
+   "resultado": "aprobado"
+  },
+  {
+   "nombre": "lote de 120 con 2 malas",
+   "lote": 120,
+   "defectuosas": 2,
+   "muestra": 20,
+   "acepta": 1,
+   "resultado": "rechazado"
+  },
+  {
+   "nombre": "lote de 200 con 2 malas",
+   "lote": 200,
+   "defectuosas": 2,
+   "muestra": 32,
+   "acepta": 2,
+   "resultado": "aprobado"
+  },
+  {
+   "nombre": "lote de 500 con 4 malas",
+   "lote": 500,
+   "defectuosas": 4,
+   "muestra": 50,
+   "acepta": 3,
+   "resultado": "rechazado"
+  },
+  {
+   "nombre": "lote de 1000 con 5 malas",
+   "lote": 1000,
+   "defectuosas": 5,
+   "muestra": 80,
+   "acepta": 5,
+   "resultado": "aprobado"
+  },
+  {
+   "nombre": "lote de 40000",
+   "lote": 40000,
+   "defectuosas": 21,
+   "muestra": 500,
+   "acepta": 21,
+   "resultado": "aprobado"
+  }
+ ]
+}

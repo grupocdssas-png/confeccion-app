@@ -135,7 +135,7 @@ select pg_temp.falla($$delete from auditoria$$, 'Borrar la auditoría');
 -- ---------- Permisos por rol ----------
 set role authenticated;
 set request.jwt.claim.sub = 'aaaaaaaa-0000-0000-0000-000000000004';  -- bodega
-select pg_temp.ok((select count(*) from empleados) = 14, 'Bodega puede leer empleados');
+select pg_temp.ok((select count(*) from empleados) = 16, 'Bodega puede leer empleados');
 update empleados set nombres = 'X' where codigo = 'E001';
 select pg_temp.ok((select nombres from empleados where codigo = 'E001') <> 'X', 'Bodega NO puede editar empleados');
 select pg_temp.falla($$insert into empleados (codigo, nombres, apellidos, qr) values ('E999','X','Y','OPR-9999')$$, 'Bodega creando empleados');

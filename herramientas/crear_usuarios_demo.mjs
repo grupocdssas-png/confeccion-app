@@ -22,9 +22,12 @@ const usuarios = [
   { correo: 'diseno@ejemplo.co', nombre: 'Diseño (EJEMPLO)', roles: ['diseno'] },
   { correo: 'compras@ejemplo.co', nombre: 'Compras (EJEMPLO)', roles: ['compras'] },
   { correo: 'comercial@ejemplo.co', nombre: 'Comercial (EJEMPLO)', roles: ['comercial'] },
+  { correo: 'calidad@ejemplo.co', nombre: 'Calidad (EJEMPLO)', roles: ['calidad'] },
   { correo: 'estampados@ejemplo.co', nombre: 'Estampados Ejemplo (EJEMPLO)', roles: ['satelite'], satelite: '900000004-4' },
   { correo: 'tablet-ent@planta.local', nombre: 'Tablet entrada', roles: ['dispositivo'], estacion: 'ENT', tipo: 'tablet' },
   { correo: 'tablet-mod1@planta.local', nombre: 'Tablet Módulo 1', roles: ['dispositivo'], estacion: 'MOD1', tipo: 'tablet' },
+  { correo: 'tablet-term@planta.local', nombre: 'Tablet Terminación', roles: ['dispositivo'], estacion: 'TER1', tipo: 'tablet' },
+  { correo: 'tablet-cal@planta.local', nombre: 'Tablet Calidad', roles: ['dispositivo'], estacion: 'CAL1', tipo: 'tablet' },
   { correo: 'celular-bodega@planta.local', nombre: 'Celular bodega', roles: ['dispositivo'], estacion: 'BOD', tipo: 'celular' },
   { correo: 'tv-planta@planta.local', nombre: 'TV de planta', roles: ['tv'] },
 ];
