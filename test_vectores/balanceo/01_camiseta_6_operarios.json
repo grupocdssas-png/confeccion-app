@@ -1,0 +1,40 @@
+{
+  "nombre": "Camiseta: 9 operaciones, 6 operarios, eficiencia 80 %, turno de 510 min, 180 prendas",
+  "operarios": 6,
+  "tolerancia": 0.10,
+  "eficiencia_pct": 80,
+  "minutos_turno": 510,
+  "pendientes": 180,
+  "operaciones": [
+    {"id": "A", "secuencia": 10, "sam": 0.35, "repeticiones": 2, "maquina": "FIL"},
+    {"id": "B", "secuencia": 20, "sam": 0.52, "repeticiones": 1, "maquina": "FIL"},
+    {"id": "C", "secuencia": 30, "sam": 0.48, "repeticiones": 1, "maquina": "REC"},
+    {"id": "D", "secuencia": 40, "sam": 0.41, "repeticiones": 1, "maquina": "PLA"},
+    {"id": "E", "secuencia": 50, "sam": 0.45, "repeticiones": 2, "maquina": "FIL"},
+    {"id": "F", "secuencia": 60, "sam": 0.60, "repeticiones": 2, "maquina": "FIL"},
+    {"id": "G", "secuencia": 70, "sam": 0.30, "repeticiones": 2, "maquina": "REC"},
+    {"id": "H", "secuencia": 80, "sam": 0.42, "repeticiones": 1, "maquina": "REC"},
+    {"id": "I", "secuencia": 90, "sam": 0.25, "repeticiones": 1, "maquina": "PLA"}
+  ],
+  "esperado": {
+    "puestos": [
+      {"numero": 1, "maquinas": ["FIL"], "asignaciones": [{"operacion_id": "A", "fraccion": 1, "minutos": 0.7}, {"operacion_id": "B", "fraccion": 0.4103, "minutos": 0.2133}]},
+      {"numero": 2, "maquinas": ["FIL", "REC"], "asignaciones": [{"operacion_id": "B", "fraccion": 0.5897, "minutos": 0.3067}, {"operacion_id": "C", "fraccion": 1, "minutos": 0.48}]},
+      {"numero": 3, "maquinas": ["PLA", "FIL"], "asignaciones": [{"operacion_id": "D", "fraccion": 1, "minutos": 0.41}, {"operacion_id": "E", "fraccion": 0.5593, "minutos": 0.5033}]},
+      {"numero": 4, "maquinas": ["FIL"], "asignaciones": [{"operacion_id": "E", "fraccion": 0.4407, "minutos": 0.3967}, {"operacion_id": "F", "fraccion": 0.4306, "minutos": 0.5167}]},
+      {"numero": 5, "maquinas": ["FIL", "REC"], "asignaciones": [{"operacion_id": "F", "fraccion": 0.5694, "minutos": 0.6833}, {"operacion_id": "G", "fraccion": 0.3833, "minutos": 0.23}]},
+      {"numero": 6, "maquinas": ["REC", "PLA"], "asignaciones": [{"operacion_id": "G", "fraccion": 0.6167, "minutos": 0.37}, {"operacion_id": "H", "fraccion": 1, "minutos": 0.42}, {"operacion_id": "I", "fraccion": 1, "minutos": 0.25}]}
+    ],
+    "metricas": {
+      "sam_total": 5.48,
+      "ciclo": 0.9133,
+      "meta_hora": 52.55,
+      "meta_turno": 446.7,
+      "dias": 0.4,
+      "cargas": [0.9133, 0.7867, 0.9133, 0.9133, 0.9133, 1.04],
+      "cuello": 6,
+      "pct_balance": 87.8,
+      "meta_hora_cuello": 46.15
+    }
+  }
+}

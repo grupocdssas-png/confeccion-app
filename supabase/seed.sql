@@ -341,3 +341,9 @@ where r.codigo = 'CAM-001';
 -- =====================================================================
 insert into public.tarifas_satelite (satelite_id, proceso, valor_unidad, observacion)
 select id, 'estampacion', 1200, 'Tarifa de EJEMPLO por prenda estampada' from public.satelites where nit = '900000004-4';
+
+-- =====================================================================
+-- Fase 7 · Pausas de turno de EJEMPLO (almuerzo y descansos)
+-- =====================================================================
+update public.turnos set minutos_pausa = 60 where id = '14000000-0000-0000-0000-000000000001';
+update public.turnos set minutos_pausa = 30 where id = '14000000-0000-0000-0000-000000000002';
