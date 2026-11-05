@@ -94,6 +94,29 @@ Map<String, Object?> datosEtiquetaJuego({
       'paquetes': paquetes.join(' '),
     };
 
+Map<String, Object?> datosEtiquetaProducto({
+  required String codigo,
+  required String referencia,
+  required String nombre,
+  required String talla,
+  required String color,
+}) =>
+    {'codigo': codigo, 'referencia': referencia, 'nombre': nombre, 'talla': talla, 'color': color};
+
+/// Etiqueta de prenda (50 × 30 mm): la misma de la migración 16.
+const plantillaProductoPorDefecto = '''^XA
+^CI28
+^PW400
+^LL240
+^LH0,0
+^FO20,16^A0N,26,26^FD{{referencia}}^FS
+^FO20,46^A0N,20,20^FB360,1,0,L^FD{{nombre}}^FS
+^FO20,74^A0N,36,36^FDT: {{talla}}^FS
+^FO170,80^A0N,22,22^FB220,1,0,L^FD{{color}}^FS
+^FO20,120^BY2^BCN,70,Y,N,N^FD{{codigo}}^FS
+^PQ{{copias}}
+^XZ''';
+
 /// Plantillas por defecto (las mismas de la migración 7) para pruebas y vista previa
 /// cuando aún no se ha descargado la configuración.
 const plantillaRolloPorDefecto = '''^XA

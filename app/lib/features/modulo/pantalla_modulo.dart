@@ -9,6 +9,7 @@ import '../../core/formato/formato.dart';
 import '../../core/sync/proveedores_sync.dart';
 import '../../core/tema/colores.dart';
 import '../../core/tema/tema.dart';
+import '../calidad/repositorio_calidad.dart';
 import '../planta/escaner.dart';
 import '../planta/indicador_sync.dart';
 import '../planta/proveedores_planta.dart';
@@ -57,12 +58,13 @@ class _PantallaModuloState extends ConsumerState<PantallaModulo> {
   List<UnidadLocal> _enCelula = [];
   Map<String, ({int puesto, double fraccion})> _delBalanceo = {};
   ParoLocal? _paro;
+  List<DevolucionLocal> _devueltas = [];
   String? _error;
   String? _ultimaOp;
 
   RepositorioModulo get _repo => ref.read(repositorioModuloProvider);
   EstacionLocal? get _estacion => ref.read(miEstacionProvider).value;
-  bool get _marcaOperaciones => _estacion?.tipo == 'modulo';
+  bool get _marcaOperaciones => _estacion?.tipo == 'modulo' || _estacion?.tipo == 'terminacion';
 
   @override
   void dispose() {
@@ -85,6 +87,7 @@ class _PantallaModuloState extends ConsumerState<PantallaModulo> {
     if (_unidad != null) {
       _unidad = await _repo.unidadPorId(_unidad!.id);
       _avance = await _repo.avance(_unidad!.id);
+      _devueltas = await ref.read(repositorioCalidadProvider).devoluciones(_unidad!.id, celulaId: e?.celulaId);
     }
     if (mounted) setState(() => _enCelula = enCelula);
   }
@@ -238,7 +241,7 @@ class _PantallaModuloState extends ConsumerState<PantallaModulo> {
     final u = _unidad!;
     final contadora = _ops.where((o) => o.contadora).firstOrNull;
     final sugeridas = contadora != null && _avance[contadora.id] != null ? _avance[contadora.id]!.hechas : u.cantidad;
-    final r = await showDialog<({int buenas, int segundas})>(context: context, builder: (_) => _DialogoEntrega(u: u, buenas: sugeridas.clamp(0, u.cantidad)));
+    final r = await showDialog<({int buenas, int segundas})>(context: context, builder: (_) => DialogoEntrega(u: u, buenas: sugeridas.clamp(0, u.cantidad)));
     if (r == null) return;
     await _repo.entregar(u, buenas: r.buenas, segundas: r.segundas, faltantes: u.cantidad - r.buenas - r.segundas, empleadoId: _operario?.id);
     _avisar('${u.codigo} entregado: ${r.buenas} buenas${r.segundas > 0 ? ', ${r.segundas} segundas' : ''}');
@@ -457,6 +460,7 @@ class _PantallaModuloState extends ConsumerState<PantallaModulo> {
     }
     if (!u.enProcesoAqui(proceso)) {
       if (u.proceso != proceso) {
+        if (_devueltas.isNotEmpty && _marcaOperaciones) return [_devueltoPorCalidad(p, u), _volver(p)];
         return [
           _mensaje(p, 'Este ${u.tipo} va para ${Colores.nombreProceso(u.proceso)}, no para ${Colores.nombreProceso(proceso)}. No se puede recibir aquí.', p.rojo),
           _volver(p),
@@ -495,6 +499,43 @@ class _PantallaModuloState extends ConsumerState<PantallaModulo> {
       _listaUltimas(p),
     ];
   }
+
+  /// Calidad devolvió prendas de este paquete: el operario arregla y marca el reproceso
+  Widget _devueltoPorCalidad(PaletaModulo p, UnidadLocal u) => _tarjeta(
+        p,
+        Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+          Text('Devuelto por calidad', style: estilo(26, peso: FontWeight.w700, color: p.ambar)),
+          const SizedBox(height: 6),
+          Text('Arregle las prendas y marque el reproceso de la operación. Luego llévelas a calidad.', style: estilo(17, color: p.suave)),
+          const SizedBox(height: 12),
+          for (final d in _devueltas)
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 8),
+              child: Row(children: [
+                Expanded(
+                  child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                    Text('${d.cantidad} · ${d.defecto}', style: estilo(21, peso: FontWeight.w700, color: p.texto)),
+                    Text('${d.operacion ?? 'Operación sin definir'}${d.empleado != null ? ' · ${d.empleado}' : ''}'
+                        '${d.alcance == 'grupal' ? ' · revisar todo el ${u.tipo}' : ''}'
+                        '${(_avance[d.fichaOperacionId]?.reprocesos ?? 0) > 0 ? ' · ${_avance[d.fichaOperacionId]!.reprocesos} reprocesos marcados' : ''}',
+                        style: estilo(16, color: p.suave)),
+                  ]),
+                ),
+                if (_ops.any((o) => o.id == d.fichaOperacionId))
+                  SizedBox(
+                    height: 64,
+                    child: FilledButton.icon(
+                      style: FilledButton.styleFrom(backgroundColor: p.ambar, foregroundColor: Colors.black),
+                      onPressed: () => _marcar(_ops.firstWhere((o) => o.id == d.fichaOperacionId), reproceso: true),
+                      icon: const Icon(Icons.replay, size: 28),
+                      label: Text('Reproceso', style: estilo(19, peso: FontWeight.w700, color: Colors.black)),
+                    ),
+                  ),
+              ]),
+            ),
+        ]),
+        borde: p.ambar,
+      );
 
   Widget _mensaje(PaletaModulo p, String t, Color c) => _tarjeta(p, Text(t, style: estilo(20, peso: FontWeight.w600, color: c)));
   Widget _volver(PaletaModulo p) => Padding(
@@ -755,15 +796,15 @@ class _PantallaModuloState extends ConsumerState<PantallaModulo> {
   }
 }
 
-class _DialogoEntrega extends StatefulWidget {
-  const _DialogoEntrega({required this.u, required this.buenas});
+class DialogoEntrega extends StatefulWidget {
+  const DialogoEntrega({super.key, required this.u, required this.buenas});
   final UnidadLocal u;
   final int buenas;
   @override
-  State<_DialogoEntrega> createState() => _DialogoEntregaState();
+  State<DialogoEntrega> createState() => _DialogoEntregaState();
 }
 
-class _DialogoEntregaState extends State<_DialogoEntrega> {
+class _DialogoEntregaState extends State<DialogoEntrega> {
   late int _buenas = widget.buenas;
   var _segundas = 0;
 

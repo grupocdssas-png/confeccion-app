@@ -94,6 +94,21 @@ const esquemaLocal = Schema([
   ]),
 
   // --- Eventos que suben (solo se agregan) ---
+  // Calidad (Fase 9). Las inspecciones del servidor bajan como "auditorias".
+  Table('defectos', [Column.text('codigo'), Column.text('nombre'), Column.text('proceso'), Column.text('severidad')]),
+  Table('planes_muestreo', [Column.text('nombre'), Column.text('tabla'), Column.integer('por_defecto')]),
+  Table('ficha_medidas', [Column.text('ficha_id'), Column.text('punto_medida'), Column.integer('orden')]),
+  Table('ficha_medida_tallas', [Column.text('medida_id'), Column.text('talla_id'), Column.real('valor_cm'), Column.real('tolerancia_cm')]),
+  Table('devoluciones_calidad', [
+    Column.text('inspeccion_id'), Column.text('op_id'), Column.text('paquete_id'), Column.text('juego_id'), Column.text('unidad_codigo'),
+    Column.text('alcance'), Column.text('defecto_id'), Column.text('ficha_operacion_id'), Column.text('empleado_id'), Column.text('celula_id'),
+    Column.integer('cantidad'), Column.integer('reprocesadas'), Column.text('estado'),
+  ]),
+  Table('auditorias', [
+    Column.text('tipo'), Column.text('anula_id'), Column.text('paquete_id'), Column.text('juego_id'), Column.text('resultado'),
+    Column.integer('defectuosas'), Column.integer('tamano_muestra'), Column.integer('acepta'), Column.text('alcance'), Column.text('ocurrido_en'),
+  ]),
+
   Table.insertOnly('asistencia_marcas', [
     Column.text('empleado_id'), Column.text('tipo'), Column.text('anula_id'), Column.text('motivo'), Column.text('ocurrido_en'),
   ]),
@@ -125,6 +140,16 @@ const esquemaLocal = Schema([
   ]),
   Table.insertOnly('paro_eventos', [
     Column.text('paro_id'), Column.text('tipo'), Column.text('validador_empleado_id'), Column.text('motivo'), Column.text('ocurrido_en'),
+  ]),
+
+  Table.insertOnly('inspecciones', [
+    Column.text('tipo'), Column.text('anula_id'), Column.text('motivo'), Column.text('unidad_id'), Column.text('inspector_id'),
+    Column.integer('tamano_muestra'), Column.text('alcance'), Column.text('observacion'), Column.text('defectos'), Column.text('medidas'),
+    Column.text('ocurrido_en'),
+  ]),
+  Table.insertOnly('devolucion_cierres', [
+    Column.text('devolucion_id'), Column.integer('reprocesadas'), Column.integer('segundas'), Column.text('empleado_id'), Column.text('observacion'),
+    Column.text('ocurrido_en'),
   ]),
 
   // --- Solo locales ---

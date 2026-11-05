@@ -7,6 +7,7 @@ import '../../features/asistencia/pantalla_asistencia_web.dart';
 import '../../features/configuracion/pantalla_configuracion.dart';
 import '../../features/configuracion/pantalla_etiquetas.dart';
 import '../../features/balanceo/pantalla_balanceo.dart';
+import '../../features/calidad/pantalla_calidad_web.dart';
 import '../../features/corte/pantalla_corte.dart';
 import '../../features/eficiencia/pantalla_eficiencia.dart';
 import '../../features/corte/pantalla_cortes.dart';
@@ -23,6 +24,7 @@ import '../../features/produccion/pantalla_pedidos.dart';
 import '../../features/operaciones/pantalla_importar.dart';
 import '../../features/operaciones/pantalla_operaciones.dart';
 import '../../features/inventario/pantalla_entradas.dart';
+import '../../features/inventario/pantalla_producto.dart';
 import '../../features/inventario/pantalla_insumos_kardex.dart';
 import '../../features/inventario/pantalla_materiales_ubicaciones.dart';
 import '../../features/inventario/pantalla_telas.dart';
@@ -30,6 +32,7 @@ import '../../features/inicio/pantalla_inicio_web.dart';
 import '../../features/personal/pantalla_personal.dart';
 import '../../features/programacion/pantalla_programacion.dart';
 import '../../features/shell_web/shell_web.dart';
+import '../../features/terminacion/pantalla_terminacion.dart';
 import '../../features/tv/pantalla_tv.dart';
 import '../auth/sesion.dart';
 
@@ -86,6 +89,8 @@ final routerWebProvider = Provider<GoRouter>((ref) {
           GoRoute(path: '/externos/:id', builder: (_, s) => protegida('/externos', PantallaRemision(key: ValueKey(s.pathParameters['id']), id: s.pathParameters['id']!))),
           GoRoute(path: '/programacion', builder: (_, _) => protegida('/programacion', const PantallaProgramacion())),
           GoRoute(path: '/balanceo', builder: (_, _) => protegida('/balanceo', const PantallaBalanceo())),
+          GoRoute(path: '/calidad', builder: (_, _) => protegida('/calidad', const PantallaCalidadWeb())),
+          GoRoute(path: '/terminacion', builder: (_, _) => protegida('/terminacion', const PantallaTerminacion())),
           GoRoute(path: '/eficiencia', builder: (_, _) => protegida('/eficiencia', const PantallaEficiencia())),
           GoRoute(path: '/tv', builder: (_, _) => protegida('/tv', const PantallaTableros())),
           GoRoute(path: '/operaciones', builder: (_, _) => protegida('/operaciones', const PantallaOperaciones())),
@@ -96,6 +101,8 @@ final routerWebProvider = Provider<GoRouter>((ref) {
           GoRoute(path: '/inventario/telas', builder: (_, _) => protegida('/inventario', const PantallaTelas())),
           GoRoute(path: '/inventario/retazos', builder: (_, _) => protegida('/inventario', const PantallaTelas(retazos: true))),
           GoRoute(path: '/inventario/insumos', builder: (_, _) => protegida('/inventario', const PantallaInsumos())),
+          GoRoute(path: '/inventario/producto', builder: (_, _) => protegida('/inventario', const PantallaProducto())),
+          GoRoute(path: '/inventario/despachos', builder: (_, _) => protegida('/inventario', const PantallaDespachos())),
           GoRoute(path: '/inventario/kardex', builder: (_, _) => protegida('/inventario', const PantallaKardex())),
           GoRoute(path: '/inventario/entradas', builder: (_, _) => protegida('/inventario', const PantallaEntradas())),
           GoRoute(path: '/inventario/entradas/nueva', builder: (_, s) => protegida('/inventario', PantallaNuevaEntrada(key: ValueKey(s.uri.toString()), ocId: s.uri.queryParameters['oc']))),

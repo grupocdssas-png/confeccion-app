@@ -139,4 +139,29 @@ class EtiquetasPdf {
     }
     return doc.save();
   }
+
+  /// Etiquetas de prenda con código de barras (50 × 30 mm). [productos]: (datosEtiquetaProducto(), copias).
+  static Future<List<int>> productos(List<(Map<String, Object?>, int)> productos) async {
+    final doc = pw.Document(theme: await _cargarTema(), title: 'Etiquetas de producto');
+    for (final (p, copias) in productos) {
+      for (var i = 0; i < copias; i++) {
+        doc.addPage(pw.Page(
+          pageFormat: _formatoChico,
+          margin: const pw.EdgeInsets.all(1.5 * PdfPageFormat.mm),
+          build: (_) => pw.Column(crossAxisAlignment: pw.CrossAxisAlignment.start, children: [
+            pw.Row(children: [
+              pw.Expanded(child: pw.Text('${p['referencia']}', style: pw.TextStyle(fontSize: 8, fontWeight: pw.FontWeight.bold))),
+              pw.Text('T: ${p['talla']}', style: pw.TextStyle(fontSize: 11, fontWeight: pw.FontWeight.bold)),
+            ]),
+            pw.Text('${p['nombre']}', style: const pw.TextStyle(fontSize: 6), maxLines: 1),
+            pw.Text('${p['color']}', style: const pw.TextStyle(fontSize: 6), maxLines: 1),
+            pw.Spacer(),
+            pw.BarcodeWidget(barcode: pw.Barcode.code128(), data: '${p['codigo']}', height: 12 * PdfPageFormat.mm, drawText: true,
+                textStyle: const pw.TextStyle(fontSize: 6)),
+          ]),
+        ));
+      }
+    }
+    return doc.save();
+  }
 }

@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../features/acceso/pantalla_ingreso.dart';
 import '../../features/asistencia/pantalla_asistencia_planta.dart';
 import '../../features/bodega/pantallas_bodega.dart';
+import '../../features/calidad/pantalla_calidad.dart';
 import '../../features/modulo/pantalla_modulo.dart';
 import '../../features/planta/pantalla_bandeja.dart';
 import '../../features/planta/pantalla_inicio_planta.dart';
@@ -30,6 +31,7 @@ final routerPlantaProvider = Provider<GoRouter>((ref) {
       GoRoute(path: '/', builder: (_, _) => const PantallaInicioPlanta()),
       GoRoute(path: '/asistencia', builder: (_, _) => const PantallaAsistenciaPlanta(atras: true)),
       GoRoute(path: '/modulo', builder: (_, _) => const PantallaModulo()),
+      GoRoute(path: '/calidad', builder: (_, _) => const PantallaCalidad()),
       GoRoute(path: '/bandeja', builder: (_, _) => const PantallaBandeja()),
       GoRoute(path: '/bodega', builder: (_, _) => const PantallaBodega()),
       GoRoute(path: '/bodega/rollo', builder: (_, _) => const PantallaRollo()),

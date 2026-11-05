@@ -219,9 +219,12 @@ begin
    where (m.paquete_id = p_unidad or m.juego_id = p_unidad) and m.ficha_operacion_id = p_fo and m.tipo = 'normal'
      and not exists (select 1 from marcaciones a where a.anula_id = m.id)
    group by m.empleado_id order by sum(m.unidades) desc, max(m.ocurrido_en_servidor) desc limit 1;
+  -- la entrega (avance) dice quién la hizo; si se registró sin célula (web), vale la de la recepción
   select e.celula_id, e.satelite_id into celula_id, satelite_id from eventos_proceso e
-   where (e.paquete_id = p_unidad or e.juego_id = p_unidad) and e.proceso = v_proceso and e.tipo = 'avance'
-   order by e.ocurrido_en_servidor desc nulls last limit 1;
+   where (e.paquete_id = p_unidad or e.juego_id = p_unidad) and e.proceso = v_proceso and e.tipo in ('avance','recepcion')
+     and (e.celula_id is not null or e.satelite_id is not null)
+     and not exists (select 1 from eventos_proceso a where a.anula_id = e.id)
+   order by (e.tipo = 'avance') desc, e.ocurrido_en_servidor desc nulls last limit 1;
   if celula_id is null and satelite_id is null then
     select m.celula_id into celula_id from marcaciones m
      where (m.paquete_id = p_unidad or m.juego_id = p_unidad) and m.ficha_operacion_id = p_fo order by m.ocurrido_en_servidor desc limit 1;
@@ -232,8 +235,9 @@ end $$;
 create or replace function public.celula_confeccion(p_unidad uuid) returns uuid
 language sql stable security definer set search_path = public as $$
   select e.celula_id from eventos_proceso e
-  where (e.paquete_id = p_unidad or e.juego_id = p_unidad) and e.tipo = 'avance' and e.proceso = 'confeccion'
-  order by e.ocurrido_en_servidor desc nulls last limit 1
+  where (e.paquete_id = p_unidad or e.juego_id = p_unidad) and e.tipo in ('avance','recepcion') and e.proceso = 'confeccion' and e.celula_id is not null
+    and not exists (select 1 from eventos_proceso a where a.anula_id = e.id)
+  order by (e.tipo = 'avance') desc, e.ocurrido_en_servidor desc nulls last limit 1
 $$;
 
 -- Última auditoría final vigente (no anulada) de una unidad
@@ -799,7 +803,7 @@ begin
     union
     select distinct i.id, i.tamano_muestra, case p_agrupar when 'celula' then e.celula_id else e.satelite_id end
     from ins i join eventos_proceso e on (e.paquete_id = coalesce(i.paquete_id, i.juego_id) or e.juego_id = coalesce(i.juego_id, i.paquete_id))
-      and e.tipo = 'avance'
+      and e.tipo in ('avance','recepcion')
     where p_agrupar in ('celula','satelite') and case p_agrupar when 'celula' then e.celula_id else e.satelite_id end is not null
   ), base as (
     select k, sum(tamano_muestra)::int as insp from quien where k is not null group by k

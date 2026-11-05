@@ -27,13 +27,14 @@ class PantallaInicioPlanta extends ConsumerWidget {
         if (e.tipo == 'entrada') return const PantallaAsistenciaPlanta();
         final funciones = <(String, IconData, String?, int)>[
           ('Asistencia', Icons.badge_outlined, '/asistencia', 1),
-          if (e.tipo == 'modulo') ('Marcar operaciones', Icons.touch_app_outlined, '/modulo', 6),
-          if (e.tipo != 'modulo' && e.proceso != null && e.tipo != 'mesa_corte') ('Recibir y entregar paquetes', Icons.qr_code_scanner, '/modulo', 6),
+          if (e.tipo == 'modulo' || e.tipo == 'terminacion') ('Marcar operaciones', Icons.touch_app_outlined, '/modulo', 6),
+          if (e.tipo != 'modulo' && e.tipo != 'terminacion' && e.tipo != 'calidad' && e.proceso != null && e.tipo != 'mesa_corte')
+            ('Recibir y entregar paquetes', Icons.qr_code_scanner, '/modulo', 6),
           if (e.tipo == 'mesa_corte') ('Corte en mesa', Icons.content_cut, null, 5),
           if (e.tipo == 'bodega') ('Bodega: rollos, conteos, etiquetas', Icons.inventory_2_outlined, '/bodega', 2),
           if (e.tipo == 'mesa_corte') ('Consultar rollo', Icons.search, '/bodega/rollo', 2),
           if (e.tipo == 'bodega' || e.tipo == 'mesa_corte') ('Impresora', Icons.print_outlined, '/bodega/impresion', 2),
-          if (e.tipo == 'calidad') ('Calidad en proceso', Icons.verified_outlined, null, 9),
+          if (e.tipo == 'calidad') ('Calidad: auditoría, inspección y arreglos', Icons.verified_outlined, '/calidad', 9),
         ];
         return Scaffold(
           appBar: const EncabezadoPlanta(titulo: 'Inicio'),

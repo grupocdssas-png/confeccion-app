@@ -80,3 +80,22 @@ streams:
     queries:
       - SELECT id, codigo, nombre, visible_tablet, detiene_trabajo, detiene_celula, rol_validador, minutos_definidos, descuenta_operario
         FROM causas_paro WHERE activa = true
+
+  # Calidad (Fase 9): defectos, plan de muestreo, medidas de las fichas, devoluciones
+  # abiertas y las auditorías de lo que sigue en planta. Las inspecciones bajan con el
+  # nombre "auditorias" porque "inspecciones" es la tabla local que sube.
+  calidad_planta:
+    auto_subscribe: true
+    queries:
+      - SELECT id, codigo, nombre, proceso, severidad FROM defectos WHERE activo = true
+      - SELECT id, nombre, CAST(tabla AS TEXT) AS tabla, por_defecto FROM planes_muestreo WHERE activo = true
+      - SELECT id, ficha_id, punto_medida, orden FROM ficha_medidas
+      - SELECT medida_id || '_' || talla_id AS id, medida_id, talla_id, valor_cm, tolerancia_cm FROM ficha_medida_tallas
+      - SELECT id, inspeccion_id, op_id, paquete_id, juego_id, unidad_codigo, alcance, defecto_id, ficha_operacion_id, empleado_id,
+          celula_id, cantidad, reprocesadas, estado FROM devoluciones_calidad WHERE estado = 'abierta'
+      - SELECT id, tipo, anula_id, paquete_id, juego_id, resultado, defectuosas, tamano_muestra, acepta, alcance,
+          CAST(ocurrido_en_servidor AS TEXT) AS ocurrido_en FROM inspecciones AS auditorias
+        WHERE paquete_id IN (SELECT id FROM paquetes WHERE estado != 'terminado' AND estado != 'anulado')
+      - SELECT id, tipo, anula_id, paquete_id, juego_id, resultado, defectuosas, tamano_muestra, acepta, alcance,
+          CAST(ocurrido_en_servidor AS TEXT) AS ocurrido_en FROM inspecciones AS auditorias
+        WHERE juego_id IN (SELECT id FROM juegos WHERE estado != 'terminado' AND estado != 'anulado')

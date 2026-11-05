@@ -39,6 +39,8 @@ const seccionesInventario = [
   ('telas', 'Telas por rollo'),
   ('retazos', 'Retazos'),
   ('insumos', 'Insumos'),
+  ('producto', 'Producto terminado'),
+  ('despachos', 'Despachos'),
   ('kardex', 'Kardex'),
   ('entradas', 'Entradas'),
   ('ajustes', 'Ajustes'),

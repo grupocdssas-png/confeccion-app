@@ -7,7 +7,8 @@ materiales, corte, costos e inventarios.
 - **Panel web** (oficina, responsive) y, desde la Fase 8, **tableros de TV**.
 - **Servidor**: Supabase (PostgreSQL, Auth, RLS, Storage, Realtime) + **PowerSync** para la sincronización.
 
-> Estado: **Fase 8 terminada** (eficiencia, tiempos improductivos, incentivos opcionales y tableros de TV). Ver [`docs/fase-8/FASE_8.md`](docs/fase-8/FASE_8.md),
+> Estado: **Fase 9 terminada** (calidad, terminación, producto terminado, segundas y despachos). Ver [`docs/fase-9/FASE_9.md`](docs/fase-9/FASE_9.md),
+> [`docs/fase-8/FASE_8.md`](docs/fase-8/FASE_8.md),
 > [`docs/fase-7/FASE_7.md`](docs/fase-7/FASE_7.md),
 > [`docs/fase-6/FASE_6.md`](docs/fase-6/FASE_6.md),
 > [`docs/fase-5/FASE_5.md`](docs/fase-5/FASE_5.md),

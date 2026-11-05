@@ -69,6 +69,7 @@ Nunca desinstale la app ni borre sus datos con registros pendientes: se perderí
 6. Al terminar el juego: **Entregar** con buenas y segundas. El botón del sol cambia el fondo a claro.
 7. Si tiene que parar (máquina, falta de material, almuerzo, permiso…): **Paro** → la causa. Para seguir: **Reanudar**
    (si fue daño de máquina, el mecánico escanea su carnet). El tiempo parado no cuenta en contra de su eficiencia.
+8. Si calidad le devuelve prendas: escanee el paquete, arréglelas y pulse **Reproceso** en la tarjeta *Devuelto por calidad*.
 
 ## Satélites (jefe de producción y Costos)
 
@@ -90,3 +91,25 @@ Nunca desinstale la app ni borre sus datos con registros pendientes: se perderí
 3. *Causas de paro*: qué causas salen en la tablet y cómo afectan la eficiencia y la nómina.
 4. *Incentivos* (solo si la planta los paga): grupo con tramos → asígnelo al módulo → liquidación y Excel para nómina.
 5. *Tableros TV*: **Editar** las vistas y la rotación → **Abrir**. En el televisor entre con la cuenta de TV y pulse F11.
+
+## Inspector de calidad (tablet de calidad)
+
+1. *Calidad* → escanee su carnet → escanee el paquete o juego.
+2. Si viene de terminación: **Recibir**. Luego **Auditoría final**: revise al azar las prendas que dice la tablet, toque cada
+   defecto y elija la operación. Si quiere, mida una prenda.
+3. **Guardar**. Si sale rechazado, elija si vuelven solo las prendas malas o todo el paquete.
+4. Cuando vuelva arreglado: **Recibir arreglo** o haga otra auditoría. Con la auditoría aprobada: **Entregar** (buenas y segundas).
+5. En los módulos: **Inspección en proceso** para revisar sin detener el paquete.
+
+## Calidad en la oficina
+
+*Calidad*: inspecciones (toque una para ver el detalle o anularla), devoluciones abiertas, eficacia por operario, módulo y
+satélite con su Excel, defectos más frecuentes, catálogo de defectos y plan de muestreo.
+
+## Terminación y bodega de producto terminado
+
+1. La tablet de terminación marca las operaciones como la del módulo.
+2. *Terminación*: elija la OP e imprima las **etiquetas de prenda** (una por prenda, por color y talla).
+3. *Inventarios → Producto terminado*: existencias por color y talla; toque una casilla para ver sus movimientos, **ajustar** o
+   pasar a segundas.
+4. *Inventarios → Despachos → Nuevo despacho*: pedido → cantidades → **Despachar**; imprima la remisión en PDF.
