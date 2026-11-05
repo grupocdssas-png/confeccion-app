@@ -21,7 +21,7 @@ puesto 6 en 114 % (cuello de botella), balance 87,8 %. Es el caso de prueba que 
 
 ## Pruebas automáticas (todas pasan)
 
-- **338** pruebas de base de datos (**25** nuevas): métricas de balanceo iguales a la app, minutos de turno, capacidad (lunes,
+- **337** pruebas de base de datos (**24** nuevas): métricas de balanceo iguales a la app, minutos de turno, capacidad (lunes,
   sábado, festivo), permisos, célula de otro proceso, minutos requeridos, la segunda OP empieza cuando termina la primera, mover
   en la cola, la carga nunca pasa la capacidad, fecha posible (y sin operarios no hay fecha), publicar con una operación al 50 % o
   con un operario en dos puestos (rechazado), métricas al publicar, versiones.
