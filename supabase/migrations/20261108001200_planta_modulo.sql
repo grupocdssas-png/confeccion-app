@@ -131,7 +131,7 @@ $$;
 create or replace function public.aplicar_evento_unidad(
   p_id uuid, p_tipo text, p_unidad public.unidades_trabajo, p_proceso text, p_estacion uuid, p_celula uuid,
   p_buenas int, p_segundas int, p_faltantes int, p_observacion text, p_empleado uuid, p_dispositivo uuid,
-  p_ocurrido timestamptz, p_ocurrido_servidor timestamptz)
+  p_ocurrido timestamptz, p_ocurrido_servidor timestamptz, p_satelite uuid default null)
 returns boolean
 language plpgsql security definer set search_path = public as $$
 declare
@@ -159,9 +159,9 @@ begin
       raise exception '% va para %, no para %', p_unidad.codigo,
         coalesce((select nombre from procesos where codigo = p_unidad.proceso_actual), '—'), (select nombre from procesos where codigo = p_proceso);
     end if;
-    insert into eventos_proceso (id, op_id, proceso, tipo, paquete_id, juego_id, estacion_id, celula_id, entra, buenas,
+    insert into eventos_proceso (id, op_id, proceso, tipo, paquete_id, juego_id, estacion_id, celula_id, satelite_id, entra, buenas,
                                  observacion, empleado_id, dispositivo_id, ocurrido_en, ocurrido_en_servidor)
-    values (p_id, o.id, p_proceso, 'recepcion', v_paquete, v_juego, p_estacion, p_celula, p_unidad.cantidad_actual, p_unidad.cantidad_actual,
+    values (p_id, o.id, p_proceso, 'recepcion', v_paquete, v_juego, p_estacion, p_celula, p_satelite, p_unidad.cantidad_actual, p_unidad.cantidad_actual,
             p_observacion, p_empleado, p_dispositivo, p_ocurrido, p_ocurrido_servidor);
     if v_paquete is not null then
       update paquetes set estado = 'en_proceso', celula_id = p_celula where id = v_paquete;
@@ -181,9 +181,9 @@ begin
       raise exception 'Las cantidades no cuadran: entraron %, buenas + segundas + faltantes = %', p_unidad.cantidad_actual,
         coalesce(p_buenas, 0) + coalesce(p_segundas, 0) + coalesce(p_faltantes, 0);
     end if;
-    insert into eventos_proceso (id, op_id, proceso, tipo, paquete_id, juego_id, estacion_id, celula_id, entra, buenas, segundas, faltantes,
+    insert into eventos_proceso (id, op_id, proceso, tipo, paquete_id, juego_id, estacion_id, celula_id, satelite_id, entra, buenas, segundas, faltantes,
                                  observacion, empleado_id, dispositivo_id, ocurrido_en, ocurrido_en_servidor)
-    values (p_id, o.id, p_proceso, 'avance', v_paquete, v_juego, p_estacion, p_celula, p_unidad.cantidad_actual, p_buenas,
+    values (p_id, o.id, p_proceso, 'avance', v_paquete, v_juego, p_estacion, p_celula, p_satelite, p_unidad.cantidad_actual, p_buenas,
             coalesce(p_segundas, 0), coalesce(p_faltantes, 0), p_observacion, p_empleado, p_dispositivo, p_ocurrido, p_ocurrido_servidor);
     v_sig := siguiente_proceso(o.id, p_proceso);
     if v_paquete is not null then
@@ -205,7 +205,7 @@ begin
   get diagnostics v_n = row_count;
   return true;
 end $$;
-revoke all on function public.aplicar_evento_unidad(uuid, text, public.unidades_trabajo, text, uuid, uuid, int, int, int, text, uuid, uuid, timestamptz, timestamptz)
+revoke all on function public.aplicar_evento_unidad(uuid, text, public.unidades_trabajo, text, uuid, uuid, int, int, int, text, uuid, uuid, timestamptz, timestamptz, uuid)
   from public, anon, authenticated;
 
 -- Desde la web (jefe de producción): recibir o entregar a mano

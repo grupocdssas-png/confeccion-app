@@ -13,7 +13,7 @@ Se amplía en cada fase. Lo disponible hoy (Fase 1) está marcado con ✅.
 | **Compras** | Panel web | ✅ Requisiciones pendientes (automáticas por faltantes de OP y manuales) → órdenes de compra → seguimiento de lo recibido. |
 | **Diseño** | Panel web | ✅ Lista maestra de operaciones e importación desde SAMMU. ✅ Fichas técnicas: crea, edita versiones en borrador, envía a aprobación y aprueba por Diseño. |
 | **Operario** | Tablet | ✅ Asistencia con el carnet. ✅ Marca sus operaciones por juego o paquete en la tablet del módulo (también sin internet). |
-| **Satélite** | Panel web (limitado) | Próximo (Fase 6, segunda parte): ver sus remisiones. |
+| **Satélite** | Panel web (limitado) | ✅ Ve solo sus remisiones, lo que le enviaron y sus cuentas; confirma que le llegó. |
 | Demás roles | Panel web | Ven en el menú sus módulos; se activan en la fase indicada (F2, F3…). |
 
 ## Tablet de entrada (asistencia)
@@ -67,4 +67,10 @@ Nunca desinstale la app ni borre sus datos con registros pendientes: se perderí
 4. Toque el contador cada vez que termine una prenda. Si una prenda vuelve para arreglo, pulse **Reproceso** en esa operación.
 5. Si se equivocó, en *últimas marcaciones* pulse la flecha para anular.
 6. Al terminar el juego: **Entregar** con buenas y segundas. El botón del sol cambia el fondo a claro.
+
+## Satélites (jefe de producción y Costos)
+
+1. *Procesos externos y satélites* → **Nueva remisión** → satélite, proceso y los juegos que esperan ese proceso → **Imprimir remisión** y envíela con la mercancía.
+2. Cuando vuelva: abra la remisión → **Registrar devolución** contando buenas y segundas de cada juego.
+3. Costos: *Cuentas por pagar* → **Aprobar** → **Marcar pagada**. Las tarifas se mantienen en *Tarifas*.
 

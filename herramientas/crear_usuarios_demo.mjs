@@ -22,6 +22,7 @@ const usuarios = [
   { correo: 'diseno@ejemplo.co', nombre: 'Diseño (EJEMPLO)', roles: ['diseno'] },
   { correo: 'compras@ejemplo.co', nombre: 'Compras (EJEMPLO)', roles: ['compras'] },
   { correo: 'comercial@ejemplo.co', nombre: 'Comercial (EJEMPLO)', roles: ['comercial'] },
+  { correo: 'estampados@ejemplo.co', nombre: 'Estampados Ejemplo (EJEMPLO)', roles: ['satelite'], satelite: '900000004-4' },
   { correo: 'tablet-ent@planta.local', nombre: 'Tablet entrada', roles: ['dispositivo'], estacion: 'ENT', tipo: 'tablet' },
   { correo: 'tablet-mod1@planta.local', nombre: 'Tablet Módulo 1', roles: ['dispositivo'], estacion: 'MOD1', tipo: 'tablet' },
   { correo: 'celular-bodega@planta.local', nombre: 'Celular bodega', roles: ['dispositivo'], estacion: 'BOD', tipo: 'celular' },
@@ -61,7 +62,12 @@ for (const u of usuarios) {
       body: JSON.stringify({ email: u.correo, password: clave, email_confirm: true }),
     });
   }
-  await upsert('perfiles', [{ id: usuario.id, nombre: u.nombre, correo: u.correo, es_dispositivo: !!u.estacion }], 'id');
+  let sateliteId = null;
+  if (u.satelite) {
+    const [sat] = await api(`/rest/v1/satelites?nit=eq.${u.satelite}&select=id`);
+    sateliteId = sat?.id ?? null;
+  }
+  await upsert('perfiles', [{ id: usuario.id, nombre: u.nombre, correo: u.correo, es_dispositivo: !!u.estacion, satelite_id: sateliteId }], 'id');
   for (const rol of u.roles) {
     const existe = await api(`/rest/v1/usuario_roles?usuario_id=eq.${usuario.id}&rol=eq.${rol}&select=id`);
     if (!existe.length) await upsert('usuario_roles', [{ usuario_id: usuario.id, rol }], 'id');

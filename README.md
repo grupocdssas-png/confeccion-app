@@ -7,7 +7,7 @@ materiales, corte, costos e inventarios.
 - **Panel web** (oficina, responsive) y, desde la Fase 8, **tableros de TV**.
 - **Servidor**: Supabase (PostgreSQL, Auth, RLS, Storage, Realtime) + **PowerSync** para la sincronización.
 
-> Estado: **Fase 6 (primera parte) terminada** (tablet del módulo, recorrido de paquetes y juegos). Ver [`docs/fase-6/FASE_6.md`](docs/fase-6/FASE_6.md),
+> Estado: **Fase 6 terminada** (tablet del módulo, recorrido de paquetes y juegos, satélites). Ver [`docs/fase-6/FASE_6.md`](docs/fase-6/FASE_6.md),
 > [`docs/fase-5/FASE_5.md`](docs/fase-5/FASE_5.md),
 > [`docs/fase-4/FASE_4.md`](docs/fase-4/FASE_4.md),
 > [`docs/fase-3/FASE_3.md`](docs/fase-3/FASE_3.md),

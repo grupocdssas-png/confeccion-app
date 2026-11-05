@@ -335,3 +335,9 @@ from public.referencias r, (values
    '[{"letra":"A","largo_m":0.60,"unidades":{"S":4,"M":8,"L":8,"XL":4}}]', 98.0)
 ) as v(nombre, material, partes, tallas, secciones, ancho)
 where r.codigo = 'CAM-001';
+
+-- =====================================================================
+-- Fase 6 · Tarifa de satélite de EJEMPLO (reemplazar por la real)
+-- =====================================================================
+insert into public.tarifas_satelite (satelite_id, proceso, valor_unidad, observacion)
+select id, 'estampacion', 1200, 'Tarifa de EJEMPLO por prenda estampada' from public.satelites where nit = '900000004-4';

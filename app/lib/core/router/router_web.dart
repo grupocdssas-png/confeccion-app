@@ -9,6 +9,8 @@ import '../../features/configuracion/pantalla_etiquetas.dart';
 import '../../features/corte/pantalla_corte.dart';
 import '../../features/corte/pantalla_cortes.dart';
 import '../../features/corte/pantalla_juegos.dart';
+import '../../features/externos/pantalla_externos.dart';
+import '../../features/externos/pantalla_remision.dart';
 import '../../features/fichas/pantalla_ficha.dart';
 import '../../features/fichas/pantalla_fichas.dart';
 import '../../features/inventario/pantalla_ajustes_conteos.dart';
@@ -71,6 +73,8 @@ final routerWebProvider = Provider<GoRouter>((ref) {
           GoRoute(path: '/corte', builder: (_, _) => protegida('/corte', const PantallaCortes())),
           GoRoute(path: '/corte/op/:op', builder: (_, s) => protegida('/corte', PantallaJuegosOp(key: ValueKey(s.pathParameters['op']), opId: s.pathParameters['op']!))),
           GoRoute(path: '/corte/:id', builder: (_, s) => protegida('/corte', PantallaCorte(key: ValueKey(s.pathParameters['id']), id: s.pathParameters['id']!))),
+          GoRoute(path: '/externos', builder: (_, _) => protegida('/externos', const PantallaExternos())),
+          GoRoute(path: '/externos/:id', builder: (_, s) => protegida('/externos', PantallaRemision(key: ValueKey(s.pathParameters['id']), id: s.pathParameters['id']!))),
           GoRoute(path: '/operaciones', builder: (_, _) => protegida('/operaciones', const PantallaOperaciones())),
           GoRoute(path: '/operaciones/importar', builder: (_, _) => protegida('/operaciones', const PantallaImportar())),
           GoRoute(path: '/fichas', builder: (_, _) => protegida('/fichas', const PantallaFichas())),

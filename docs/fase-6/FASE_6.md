@@ -1,7 +1,6 @@
 # Fase 6: tablet del módulo y recorrido de paquetes y juegos
 
-**Estado:** primera parte terminada el 5/nov/2026 (tablet del módulo y recorrido). Falta tu revisión.
-Las remisiones a satélites quedan para la segunda parte (ver *Pendientes*).
+**Estado:** terminada el 5/nov/2026: primera parte (tablet del módulo y recorrido) y segunda parte (satélites). Falta tu revisión.
 
 ## Qué incluye
 
@@ -16,13 +15,27 @@ Las remisiones a satélites quedan para la segunda parte (ver *Pendientes*).
 | Oficina | En la OP: **Paquetes y juegos en planta** (proceso, estado, célula, marcadas) con *Recibir* y *Entregar* para los procesos sin tablet (p. ej. estampación en satélite). El historial muestra cada entrega con su juego o paquete. Con unidades, el avance después de corte ya no se registra a mano. |
 | Compilación automática | Cada vez que se sube código a GitHub se corren las pruebas y se generan el **APK** y el **panel web** para descargar (no hace falta VS Code). |
 
+## Segunda parte: satélites
+
+| Parte | Detalle |
+|---|---|
+| Remisión de salida | Satélite → proceso (solo los que hace ese satélite) → se eligen los juegos o paquetes que esperan ese proceso → fecha de devolución y observación. Consecutivo `REM-…`. Cada juego entra al proceso a nombre del satélite. No se envía lo que ya está en otro satélite ni a un proceso que la ruta de la OP tiene como interno. Se pueden enviar insumos: salen del inventario con la OP (regla 1). |
+| Documento | **Imprimir remisión** (A4 con QR, prendas por juego y firmas de quien entrega y quien recibe). |
+| Devolución | Por cada juego: buenas, segundas y faltantes (regla 5). Puede ser parcial. `DEV-…`. Las buenas siguen al proceso siguiente; cuando vuelve todo, la remisión queda **Devuelta** y el proceso se cierra solo. |
+| Anular | Solo una salida sin devoluciones: los juegos vuelven a esperar el proceso y los insumos a la bodega, con eventos inversos (regla 2). |
+| Cuentas por pagar | Una por devolución y OP: **prendas buenas × tarifa vigente** (`CPS-…`). Sin tarifa queda sin valor y con alerta. **Costos** corrige el valor, aprueba y marca pagada con la referencia del pago. |
+| Tarifas | Por satélite y proceso, general o por referencia; con fecha de vigencia (una nueva no cambia las anteriores). |
+| Panel del satélite | El usuario del satélite entra a la misma web y ve **solo lo suyo**: sus remisiones, los juegos, la OP y referencia de lo que le enviaron, y sus cuentas. Puede **confirmar que le llegó** (queda la fecha y su nota). No ve inventario ni otros talleres, y no registra devoluciones. |
+
 ## Pruebas automáticas (todas pasan)
 
-- **282** pruebas de base de datos (**32** nuevas): el módulo no recibe lo que va para otro proceso, permisos, entrega que no cuadra,
+- **313** pruebas de base de datos: **31** de satélites (permisos, satélite que no hace el proceso, juego ya enviado, insumos con la OP,
+  anulación con eventos inversos, lo que ve cada satélite, confirmación del taller, devolución que no cuadra, tarifa vigente,
+  aprobación y pago por Costos) y **32** de la tablet del módulo: el módulo no recibe lo que va para otro proceso, permisos, entrega que no cuadra,
   estampación desde la web que se cierra sola, recepción idempotente (reenvío) y doble recepción rechazada, eficiencia oficial
   (primera sin tiempo, 1 minuto real), operación de otra ficha, hora en el futuro, marcación de más con alerta, anulación,
   reproceso, entrega con segunda que pasa a terminación.
-- **62** pruebas de la app: cálculo de eficiencia igual al servidor y la tablet sobre la base local real (recibir, marcar,
+- **63** pruebas de la app (incluye el PDF de remisión): cálculo de eficiencia igual al servidor y la tablet sobre la base local real (recibir, marcar,
   anular, entregar, eficiencia del mes).
 - **Punta a punta** con Supabase y PowerSync reales: la tablet del módulo descarga los juegos, recibe, marca 3 veces **sin
   conexión**, entrega; al volver la señal sube todo una vez, el servidor calcula los minutos reales y baja la eficiencia del día.
@@ -45,6 +58,16 @@ Las remisiones a satélites quedan para la segunda parte (ver *Pendientes*).
 6. Apague el wifi, marque varias, encienda: el indicador pasa de *Sin conexión · N por enviar* a *Sincronizado*.
 7. **Entregar** → buenas y segundas. En la web, la OP muestra el juego en terminación y el historial con la entrega.
 
+### Satélites
+
+1. Vuelva a correr `crear_usuarios_demo.mjs` (agrega `estampados@ejemplo.co`, el usuario del satélite de EJEMPLO).
+   `preparar_planta_ejemplo.sql` ya hizo una remisión con 8 juegos y su devolución; JG-000009 y JG-000010 esperan estampación.
+2. **Jefe de producción** → *Procesos externos y satélites* → **Nueva remisión** → *Estampados Ejemplo* → elija los dos juegos → enviar.
+   Pulse **Imprimir remisión**.
+3. Entre como `estampados@ejemplo.co`: solo ve su remisión → **Confirmar que llegó**.
+4. Como jefe: **Registrar devolución** → quite una buena y ponga una segunda → *Registrar*. Vea la cuenta por pagar.
+5. Como **Costos** (`costos@ejemplo.co`): *Cuentas por pagar* → **Aprobar** → **Marcar pagada**. En *Tarifas*, cree una nueva.
+
 ## Capturas (datos de ejemplo)
 
 ![Recibir](capturas/tablet_recibir.png)
@@ -53,13 +76,20 @@ Las remisiones a satélites quedan para la segunda parte (ver *Pendientes*).
 ![Varias operaciones](capturas/tablet_varias_operaciones.png)
 ![Entregar](capturas/tablet_entregar.png)
 ![Paquetes y juegos en la OP](capturas/web_paquetes_juegos.png)
+![Nueva remisión](capturas/satelite_nueva_remision.png)
+![Lo que ve el satélite](capturas/satelite_vista_del_taller.png)
+![Devolución](capturas/satelite_devolucion.png)
+![Remisión devuelta con su cuenta](capturas/satelite_remision_devuelta.png)
+![Cuentas por pagar](capturas/satelite_cuentas.png)
 
 (En las capturas la eficiencia sale muy alta porque se tocó el contador cada 2 segundos.)
 
 ## Pendientes y decisiones
 
-- **Segunda parte de la Fase 6: satélites.** Remisiones de salida y entrada por juego o paquete, portal web del satélite y
-  cuentas por pagar. Mientras tanto, los procesos en satélite se reciben y entregan desde la OP en la web.
+- **Tarifa de satélite de EJEMPLO** ($ 1.200 por prenda estampada): reemplácela por la real en *Tarifas*.
+- Avisos por WhatsApp al satélite y exportación de las cuentas a Alegra: con las integraciones (Fase 11).
+- Se paga por prenda **buena** devuelta; si prefiere pagar también las segundas, es un cambio pequeño.
+- El usuario de cada satélite se crea como los demás, con el rol *Satélite* y su taller asignado.
 - Los botones *Paro o novedad* y *Mensaje* de la maqueta llegan con eficiencia (Fase 8) y mensajes (Fase 12); por eso
   no aparecen todavía. Las segundas se registran al entregar.
 - La tablet cuenta lo marcado en ella misma: si un operario cambia de tablet a mitad de un paquete, la otra no ve sus marcas

@@ -1,6 +1,7 @@
 -- Deja la OP-000001 de EJEMPLO lista para probar la tablet del módulo (Fase 6):
 -- llega el rib, se cortan cuerpo + mangas y cuellos, se arman los juegos, termina el
--- corte y pasan por estampación. Resultado: 10 juegos esperando confección.
+-- corte y 8 pasan por estampación en el satélite de EJEMPLO (remisión y devolución).
+-- Resultado: 8 juegos esperando confección y 2 esperando estampación.
 -- Uso (base local de Supabase, conexión directa):
 --   psql postgresql://postgres:postgres@127.0.0.1:54322/postgres -f herramientas/preparar_planta_ejemplo.sql
 \set ON_ERROR_STOP 1
@@ -39,11 +40,19 @@ select confirmar_corte(guardar_corte(jsonb_build_object('op_id', k.op, 'tipo', '
     'rollos', jsonb_build_object((select id from rollos where lote_tintura = 'L-RIB-N1' and not es_retazo), jsonb_build_object('fin', 'retazo'))))))
 from k;
 
--- 3. Juegos, fin del corte y estampación (satélite, desde la oficina)
-select armar_juegos(id) from ordenes_produccion where consecutivo = 'OP-000001';
+-- 3. Juegos y fin del corte
+select count(*) as juegos from (select armar_juegos(id) from ordenes_produccion where consecutivo = 'OP-000001') x;
 select terminar_corte_op(id) from ordenes_produccion where consecutivo = 'OP-000001';
-select mover_unidad(j.codigo, 'recepcion', 'estampacion') from juegos j join ordenes_produccion o on o.id = j.op_id where o.consecutivo = 'OP-000001';
-select mover_unidad(j.codigo, 'entrega', 'estampacion', null, j.cantidad_actual, 0, 0) from juegos j join ordenes_produccion o on o.id = j.op_id
- where o.consecutivo = 'OP-000001';
+
+-- 4. Estampación en el satélite de EJEMPLO: remisión con 8 juegos y su devolución completa.
+--    JG-000009 y JG-000010 quedan esperando estampación (para probar una remisión en la web).
+create temp table rem_ejemplo as
+select crear_remision_salida((select id from satelites where nit = '900000004-4'), 'estampacion',
+        (select array_agg(j.id order by j.codigo) from juegos j join ordenes_produccion o on o.id = j.op_id
+          where o.consecutivo = 'OP-000001' and j.codigo not in ('JG-000009', 'JG-000010')),
+        '[]', 'Remisión de EJEMPLO', current_date + 3) as id;
+select count(*) as devolucion from (
+  select registrar_devolucion(r.id, (select jsonb_agg(jsonb_build_object('unidad_id', coalesce(ru.juego_id, ru.paquete_id), 'buenas', ru.cantidad))
+                                     from remision_unidades ru where ru.remision_id = r.id)) from rem_ejemplo r) x;
 commit;
 select codigo, cantidad, estado, proceso_actual from juegos order by codigo;
