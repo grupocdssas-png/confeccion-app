@@ -428,3 +428,5 @@ begin
 end $$;
 
 alter publication powersync add table public.balanceos, public.balanceo_puestos, public.balanceo_asignaciones;
+create policy festivos_insertar_programacion on public.festivos for insert to authenticated with check (public.puede('programacion','editar'));
+create policy festivos_borrar_programacion on public.festivos for delete to authenticated using (public.puede('programacion','editar'));

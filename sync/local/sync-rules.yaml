@@ -63,3 +63,13 @@ streams:
         FROM juegos WHERE estado != 'terminado' AND estado != 'anulado'
       - SELECT empleado_id || '_' || CAST(fecha AS TEXT) AS id, empleado_id, CAST(fecha AS TEXT) AS fecha, unidades, reprocesos,
           minutos_esperados, minutos_reales FROM eficiencia_diaria
+
+  # Balanceo publicado (Fase 7): la tablet propone a cada operario las operaciones de su puesto.
+  balanceo_planta:
+    auto_subscribe: true
+    queries:
+      - SELECT id, op_id, celula_id, version FROM balanceos WHERE estado = 'publicado'
+      - SELECT id, balanceo_id, numero, empleado_id FROM balanceo_puestos
+        WHERE balanceo_id IN (SELECT id FROM balanceos WHERE estado = 'publicado')
+      - SELECT id, balanceo_id, puesto_id, ficha_operacion_id, fraccion FROM balanceo_asignaciones
+        WHERE balanceo_id IN (SELECT id FROM balanceos WHERE estado = 'publicado')

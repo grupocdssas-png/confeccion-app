@@ -144,6 +144,17 @@ class RepositorioModulo {
     return [for (final f in filas) OperacionLocal(f, int.tryParse('${porDefecto ?? 1}') ?? 1)];
   }
 
+  /// Operaciones que el balanceo publicado le asigna al operario en esta OP y célula
+  /// (puesto y fracción). Vacío si no hay balanceo o el operario no tiene puesto.
+  Future<Map<String, ({int puesto, double fraccion})>> operacionesDelBalanceo(String empleadoId, String opId, String? celulaId) async {
+    final filas = await _db.getAll('''
+      SELECT a.ficha_operacion_id, a.fraccion, p.numero FROM balanceos b
+      JOIN balanceo_puestos p ON p.balanceo_id = b.id
+      JOIN balanceo_asignaciones a ON a.puesto_id = p.id
+      WHERE b.op_id = ? AND b.celula_id = ? AND p.empleado_id = ?''', [opId, celulaId, empleadoId]);
+    return {for (final f in filas) f['ficha_operacion_id'] as String: (puesto: (f['numero'] as num).toInt(), fraccion: (f['fraccion'] as num).toDouble())};
+  }
+
   Future<List<MarcacionLocal>> _marcaciones({String? empleadoId, String? unidadId, DateTime? desde}) async {
     final filas = await _db.getAll('''
       SELECT b.id, b.resumen, b.ocurrido_en, b.estado FROM bandeja b

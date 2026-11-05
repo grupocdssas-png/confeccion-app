@@ -82,6 +82,11 @@ const esquemaLocal = Schema([
     Column.real('minutos_esperados'), Column.real('minutos_reales'),
   ], indexes: [Index('ef_empleado', [IndexedColumn('empleado_id'), IndexedColumn('fecha')])]),
 
+  // --- Balanceo publicado (Fase 7) ---
+  Table('balanceos', [Column.text('op_id'), Column.text('celula_id'), Column.integer('version')]),
+  Table('balanceo_puestos', [Column.text('balanceo_id'), Column.integer('numero'), Column.text('empleado_id')]),
+  Table('balanceo_asignaciones', [Column.text('balanceo_id'), Column.text('puesto_id'), Column.text('ficha_operacion_id'), Column.real('fraccion')]),
+
   // --- Eventos que suben (solo se agregan) ---
   Table.insertOnly('asistencia_marcas', [
     Column.text('empleado_id'), Column.text('tipo'), Column.text('anula_id'), Column.text('motivo'), Column.text('ocurrido_en'),

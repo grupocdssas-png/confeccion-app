@@ -110,4 +110,15 @@ void main() {
     expect(ef.mes, 90.0, reason: 'octubre no cuenta');
     expect(ef.hoy, isNull);
   });
+
+  test('operaciones propuestas por el balanceo publicado para el puesto del operario', () async {
+    await db.execute("INSERT INTO balanceos (id, op_id, celula_id, version) VALUES ('b', 'op', 'cel', 1)");
+    await db.execute("INSERT INTO balanceo_puestos (id, balanceo_id, numero, empleado_id) VALUES ('p1', 'b', 1, 'e1'), ('p2', 'b', 2, 'e2')");
+    await db.execute("INSERT INTO balanceo_asignaciones (id, balanceo_id, puesto_id, ficha_operacion_id, fraccion) VALUES "
+        "('a1', 'b', 'p1', 'fo1', 1), ('a2', 'b', 'p1', 'fo2', 0.4), ('a3', 'b', 'p2', 'fo2', 0.6)");
+    final r = await repo.operacionesDelBalanceo('e1', 'op', 'cel');
+    expect(r.keys.toSet(), {'fo1', 'fo2'});
+    expect(r['fo2'], (puesto: 1, fraccion: 0.4));
+    expect(await repo.operacionesDelBalanceo('e1', 'op', 'otra'), isEmpty);
+  });
 }

@@ -55,6 +55,7 @@ class _PantallaModuloState extends ConsumerState<PantallaModulo> {
   List<MarcacionLocal> _ultimas = [];
   EficienciasOperario _ef = const EficienciasOperario();
   List<UnidadLocal> _enCelula = [];
+  Map<String, ({int puesto, double fraccion})> _delBalanceo = {};
   String? _error;
   String? _ultimaOp;
 
@@ -116,10 +117,13 @@ class _PantallaModuloState extends ConsumerState<PantallaModulo> {
   Future<void> _usarUnidad(UnidadLocal u) async {
     final ops = _marcaOperaciones ? await _repo.operaciones(u, _estacion?.proceso) : <OperacionLocal>[];
     final guardadas = await _opsGuardadas(u);
+    // sin elección propia, se usan las del balanceo publicado para su puesto
+    final balanceo = await _repo.operacionesDelBalanceo(_operario!.id, u.opId, _estacion?.celulaId);
     setState(() {
       _unidad = u;
       _ops = ops;
-      _elegidas = ops.where((o) => guardadas.contains(o.id)).toList();
+      _delBalanceo = balanceo;
+      _elegidas = ops.where((o) => guardadas.isNotEmpty ? guardadas.contains(o.id) : balanceo.containsKey(o.id)).toList();
       _error = null;
       _codigo.clear();
     });
@@ -418,7 +422,8 @@ class _PantallaModuloState extends ConsumerState<PantallaModulo> {
         Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
           Text('¿Qué operaciones hace en este ${_unidad!.tipo}?', style: estilo(24, peso: FontWeight.w700, color: p.texto)),
           const SizedBox(height: 4),
-          Text('Se recuerdan para los siguientes de la misma referencia.', style: estilo(16, color: p.suave)),
+          Text(_delBalanceo.isEmpty ? 'Se recuerdan para los siguientes de la misma referencia.' : 'Vienen marcadas las de su puesto en el balanceo; puede cambiarlas.',
+              style: estilo(16, color: p.suave)),
           const SizedBox(height: 12),
           if (_ops.isEmpty) Text('La ficha no tiene operaciones de ${Colores.nombreProceso(_estacion?.proceso)}.', style: estilo(18, color: p.rojo)),
           for (final o in _ops)
@@ -426,7 +431,9 @@ class _PantallaModuloState extends ConsumerState<PantallaModulo> {
               value: sel.contains(o.id),
               onChanged: (v) => set(() => v! ? sel.add(o.id) : sel.remove(o.id)),
               title: Text(o.titulo, style: estilo(21, peso: FontWeight.w600, color: p.texto)),
-              subtitle: Text('${o.codigo} · SAM ${Formato.numero(o.sam, decimales: 3)}${o.contadora ? ' · contadora' : ''}', style: estilo(15, color: p.suave)),
+              subtitle: Text('${o.codigo} · SAM ${Formato.numero(o.sam, decimales: 3)}${o.contadora ? ' · contadora' : ''}'
+                  '${_delBalanceo[o.id] != null ? ' · su puesto ${_delBalanceo[o.id]!.puesto} en el balanceo${_delBalanceo[o.id]!.fraccion < 0.999 ? ' (${Formato.numero(_delBalanceo[o.id]!.fraccion * 100, decimales: 0)} %)' : ''}' : ''}',
+                  style: estilo(15, color: _delBalanceo[o.id] != null ? p.acento : p.suave)),
               controlAffinity: ListTileControlAffinity.leading,
             ),
           const SizedBox(height: 12),

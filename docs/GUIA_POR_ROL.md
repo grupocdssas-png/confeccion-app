@@ -74,3 +74,10 @@ Nunca desinstale la app ni borre sus datos con registros pendientes: se perderí
 2. Cuando vuelva: abra la remisión → **Registrar devolución** contando buenas y segundas de cada juego.
 3. Costos: *Cuentas por pagar* → **Aprobar** → **Marcar pagada**. Las tarifas se mantienen en *Tarifas*.
 
+## Jefe de producción: programación y balanceo
+
+1. *Programación → Células y turnos*: turno, días laborales, eficiencia planeada y operarios de cada módulo; pausas de los turnos; festivos.
+2. *Programación → Programa*: **Programar OP** en un módulo y ordenar la cola. El Gantt marca en rojo lo que termina después de la entrega.
+3. Antes de prometer una fecha: **Fecha posible de entrega** (referencia y cantidad).
+4. *Balanceo*: OP y módulo → **Balancear automático** → ajuste operarios y % → **Publicar en tablets**. Imprima la hoja de balanceo para el módulo.
+
