@@ -10,7 +10,7 @@ import 'iconos.dart';
 
 /// Fase que está implementada hasta ahora (los módulos de fases posteriores se
 /// muestran en el menú pero atenuados).
-const faseActual = 7;
+const faseActual = 8;
 
 /// Estructura del panel web: menú lateral oscuro (fijo en pantallas anchas,
 /// desplegable en celular) + contenido.
@@ -50,7 +50,6 @@ class _MenuLateral extends ConsumerWidget {
     final rutaActual = GoRouterState.of(context).uri.path;
     final grupos = <String, List<PermisoModulo>>{};
     for (final p in sesion.permisos) {
-      if (p.modulo == 'tv') continue; // la TV se abre aparte
       grupos.putIfAbsent(p.grupo, () => []).add(p);
     }
     const orden = ['General', 'Producción', 'Diseño', 'Inventarios', 'Piso', 'Administración'];

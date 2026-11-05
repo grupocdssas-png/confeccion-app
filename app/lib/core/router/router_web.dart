@@ -8,6 +8,7 @@ import '../../features/configuracion/pantalla_configuracion.dart';
 import '../../features/configuracion/pantalla_etiquetas.dart';
 import '../../features/balanceo/pantalla_balanceo.dart';
 import '../../features/corte/pantalla_corte.dart';
+import '../../features/eficiencia/pantalla_eficiencia.dart';
 import '../../features/corte/pantalla_cortes.dart';
 import '../../features/corte/pantalla_juegos.dart';
 import '../../features/externos/pantalla_externos.dart';
@@ -29,6 +30,7 @@ import '../../features/inicio/pantalla_inicio_web.dart';
 import '../../features/personal/pantalla_personal.dart';
 import '../../features/programacion/pantalla_programacion.dart';
 import '../../features/shell_web/shell_web.dart';
+import '../../features/tv/pantalla_tv.dart';
 import '../auth/sesion.dart';
 
 /// Rutas del panel web. Cada ruta exige permiso de "ver" sobre su módulo.
@@ -54,10 +56,15 @@ final routerWebProvider = Provider<GoRouter>((ref) {
       final enIngreso = state.matchedLocation == '/ingreso';
       if (!dentro) return enIngreso ? null : '/ingreso';
       if (enIngreso) return '/';
+      // la cuenta del televisor entra directo a sus tableros
+      final permisos = sesion.value!.permisos;
+      if (state.matchedLocation == '/' && permisos.isNotEmpty && permisos.every((p) => p.modulo == 'tv')) return '/tv';
       return null;
     },
     routes: [
       GoRoute(path: '/ingreso', builder: (_, _) => const PantallaIngreso()),
+      // pantalla completa para el televisor (sin menú lateral)
+      GoRoute(path: '/tv/ver/:id', builder: (_, s) => PantallaTv(key: ValueKey(s.pathParameters['id']), id: s.pathParameters['id']!)),
       ShellRoute(
         builder: (_, _, child) => ShellWeb(child: child),
         routes: [
@@ -79,6 +86,8 @@ final routerWebProvider = Provider<GoRouter>((ref) {
           GoRoute(path: '/externos/:id', builder: (_, s) => protegida('/externos', PantallaRemision(key: ValueKey(s.pathParameters['id']), id: s.pathParameters['id']!))),
           GoRoute(path: '/programacion', builder: (_, _) => protegida('/programacion', const PantallaProgramacion())),
           GoRoute(path: '/balanceo', builder: (_, _) => protegida('/balanceo', const PantallaBalanceo())),
+          GoRoute(path: '/eficiencia', builder: (_, _) => protegida('/eficiencia', const PantallaEficiencia())),
+          GoRoute(path: '/tv', builder: (_, _) => protegida('/tv', const PantallaTableros())),
           GoRoute(path: '/operaciones', builder: (_, _) => protegida('/operaciones', const PantallaOperaciones())),
           GoRoute(path: '/operaciones/importar', builder: (_, _) => protegida('/operaciones', const PantallaImportar())),
           GoRoute(path: '/fichas', builder: (_, _) => protegida('/fichas', const PantallaFichas())),

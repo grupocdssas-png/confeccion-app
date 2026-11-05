@@ -56,6 +56,7 @@ class _PantallaModuloState extends ConsumerState<PantallaModulo> {
   EficienciasOperario _ef = const EficienciasOperario();
   List<UnidadLocal> _enCelula = [];
   Map<String, ({int puesto, double fraccion})> _delBalanceo = {};
+  ParoLocal? _paro;
   String? _error;
   String? _ultimaOp;
 
@@ -79,6 +80,7 @@ class _PantallaModuloState extends ConsumerState<PantallaModulo> {
     if (_operario != null) {
       _ultimas = await _repo.ultimas(_operario!.id);
       _ef = await _repo.eficiencias(_operario!.id);
+      _paro = await _repo.paroActivo(_operario!.id);
     }
     if (_unidad != null) {
       _unidad = await _repo.unidadPorId(_unidad!.id);
@@ -147,7 +149,81 @@ class _PantallaModuloState extends ConsumerState<PantallaModulo> {
     await _refrescar();
   }
 
+  Future<void> _reportarParo() async {
+    final causas = await _repo.causasParo();
+    if (!mounted) return;
+    final c = await showDialog<CausaParo>(
+      context: context,
+      builder: (d) => SimpleDialog(
+        title: Text('¿Por qué se detiene?', style: estilo(24, peso: FontWeight.w700)),
+        children: [
+          for (final x in causas)
+            SimpleDialogOption(
+              onPressed: () => Navigator.pop(d, x),
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+              child: Text('${x.nombre}${x.detieneCelula ? ' (todo el módulo)' : ''}${x.minutosDefinidos != null ? ' · ${x.minutosDefinidos} min' : ''}',
+                  style: estilo(21)),
+            ),
+        ],
+      ),
+    );
+    if (c == null) return;
+    await _repo.reportarParo(_operario!.id, c);
+    await _refrescar();
+  }
+
+  Future<void> _reanudar() async {
+    final paro = _paro!;
+    String? validador;
+    if (paro.rolValidador != null) {
+      final v = await escanearQr(context, titulo: 'Carnet de quien revisó (${paro.rolValidador})');
+      if (v == null) return;
+      final e = await ref.read(repoAsistenciaProvider).buscar(v);
+      if (e == null || e.id == _operario!.id) {
+        _avisar('Debe escanear el carnet de otra persona (${paro.rolValidador})', error: true);
+        return;
+      }
+      validador = e.id;
+    }
+    await _repo.terminarParo(paro, _operario!.id, validadorId: validador);
+    _avisar('Trabajo reanudado');
+    await _refrescar();
+  }
+
+  Widget _bannerParo(PaletaModulo p) {
+    final x = _paro!;
+    final min = DateTime.now().toUtc().difference(x.inicio).inMinutes;
+    return Container(
+      margin: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(color: p.rojo.withValues(alpha: 0.15), border: Border.all(color: p.rojo, width: 2), borderRadius: BorderRadius.circular(16)),
+      child: Row(children: [
+        Icon(Icons.pause_circle_filled, color: p.rojo, size: 44),
+        const SizedBox(width: 14),
+        Expanded(
+          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Text('Paro: ${x.causa}', style: estilo(24, peso: FontWeight.w700, color: p.texto)),
+            Text('Desde las ${Formato.hora(x.inicio)} · $min min${x.detieneTrabajo ? ' · no se puede marcar' : ''}'
+                '${x.rolValidador != null ? ' · lo cierra ${_nombreRol(x.rolValidador!)}' : ''}', style: estilo(16, color: p.suave)),
+          ]),
+        ),
+        SizedBox(
+          height: 64,
+          child: FilledButton(
+            style: FilledButton.styleFrom(backgroundColor: p.boton, foregroundColor: Colors.white),
+            onPressed: _reanudar,
+            child: Text('Reanudar', style: estilo(20, peso: FontWeight.w700, color: Colors.white)),
+          ),
+        ),
+      ]),
+    );
+  }
+
   Future<void> _marcar(OperacionLocal op, {bool reproceso = false}) async {
+    if (_paro?.detieneTrabajo == true) {
+      _avisar('Hay un paro activo (${_paro!.causa}): reanude para marcar', error: true);
+      return;
+    }
     final hechas = _avance[op.id]?.hechas ?? 0;
     if (!reproceso && hechas + op.unidadesMarcacion > _unidad!.cantidad) {
       _avisar('${op.nombre} ya está completa en este ${_unidad!.tipo} (${_unidad!.cantidad})', error: true);
@@ -211,6 +287,7 @@ class _PantallaModuloState extends ConsumerState<PantallaModulo> {
           child: Column(children: [
             const AvisosPlanta(),
             _barraOperario(p),
+            if (_paro != null) _bannerParo(p),
             Expanded(child: SingleChildScrollView(padding: const EdgeInsets.all(20), child: _contenido(p))),
             if (_operario != null && _unidad != null && _unidad!.enProcesoAqui(_estacion?.proceso)) _acciones(p),
           ]),
@@ -233,6 +310,17 @@ class _PantallaModuloState extends ConsumerState<PantallaModulo> {
             child: Text(_operario == null ? 'Sin operario' : '${_operario!.nombres} ${_operario!.apellidos}',
                 style: estilo(20, peso: FontWeight.w600, color: p.texto), overflow: TextOverflow.ellipsis),
           ),
+          // el paro se reporta con o sin paquete en la mano (ej. falta de trabajo)
+          if (_operario != null && _marcaOperaciones && _paro == null)
+            Padding(
+              padding: const EdgeInsets.only(right: 8),
+              child: OutlinedButton.icon(
+                style: OutlinedButton.styleFrom(foregroundColor: Colores.ambar, side: const BorderSide(color: Colores.ambar), minimumSize: const Size(0, 48)),
+                onPressed: _reportarParo,
+                icon: const Icon(Icons.pause_circle_outline, size: 24),
+                label: Text('Paro', style: estilo(17, peso: FontWeight.w700, color: Colores.ambar)),
+              ),
+            ),
           if (_operario != null)
             TextButton(
               onPressed: () => setState(() {
@@ -580,11 +668,13 @@ class _PantallaModuloState extends ConsumerState<PantallaModulo> {
           ),
         );
     return Row(children: [
-      caja('EFICIENCIA · HORA', _ef.hora, 'meta 100 %'),
-      const SizedBox(width: 12),
-      caja('EFICIENCIA · HOY', _ef.hoy, '${_ef.unidadesHoy} unidades'),
-      const SizedBox(width: 12),
-      caja('EFICIENCIA · MES', _ef.mes, '${_ef.reprocesosHoy} reprocesos hoy'),
+      caja('HORA', _ef.hora, 'meta 100 %'),
+      const SizedBox(width: 10),
+      caja('HOY', _ef.hoy, '${_ef.unidadesHoy} unidades'),
+      const SizedBox(width: 10),
+      caja('QUINCENA', _ef.quincena, '${_ef.reprocesosHoy} reprocesos hoy'),
+      const SizedBox(width: 10),
+      caja('MES', _ef.mes, 'eficiencia'),
     ]);
   }
 
@@ -651,6 +741,13 @@ class _PantallaModuloState extends ConsumerState<PantallaModulo> {
       ),
     );
   }
+
+  static String _nombreRol(String r) => switch (r) {
+        'mecanico' => 'el mecánico',
+        'supervisor' => 'el supervisor',
+        'calidad' => 'calidad',
+        _ => r.replaceAll('_', ' '),
+      };
 
   String _mmss(double minutos) {
     final s = (minutos * 60).round();

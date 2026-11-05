@@ -55,6 +55,29 @@ class OperacionLocal {
   String get titulo => repeticiones == 1 ? nombre : '$nombre ×${Formato.numero(repeticiones, decimales: repeticiones % 1 == 0 ? 0 : 1)}';
 }
 
+class CausaParo {
+  CausaParo(this.f);
+  final Map<String, Object?> f;
+  String get id => f['id'] as String;
+  String get nombre => '${f['nombre']}';
+  bool get detieneTrabajo => f['detiene_trabajo'] == 1;
+  bool get detieneCelula => f['detiene_celula'] == 1;
+  bool get descuentaOperario => f['descuenta_operario'] == 1;
+  String? get rolValidador => f['rol_validador'] as String?;
+  int? get minutosDefinidos => (f['minutos_definidos'] as num?)?.toInt();
+}
+
+class ParoLocal {
+  ParoLocal({required this.id, required this.causa, required this.inicio, this.fin, required this.detieneTrabajo, this.rolValidador, required this.descuenta});
+  final String id;
+  final String causa;
+  final DateTime inicio;
+  final DateTime? fin;
+  final bool detieneTrabajo;
+  final String? rolValidador;
+  final bool descuenta;
+}
+
 class MarcacionLocal {
   MarcacionLocal(this.id, this.r, this.hora, this.estado);
   final String id;
@@ -74,8 +97,8 @@ class MarcacionLocal {
 }
 
 class EficienciasOperario {
-  const EficienciasOperario({this.hora, this.hoy, this.mes, this.unidadesHoy = 0, this.reprocesosHoy = 0});
-  final double? hora, hoy, mes;
+  const EficienciasOperario({this.hora, this.hoy, this.quincena, this.mes, this.unidadesHoy = 0, this.reprocesosHoy = 0});
+  final double? hora, hoy, quincena, mes;
   final int unidadesHoy, reprocesosHoy;
 }
 
@@ -155,6 +178,56 @@ class RepositorioModulo {
     return {for (final f in filas) f['ficha_operacion_id'] as String: (puesto: (f['numero'] as num).toInt(), fraccion: (f['fraccion'] as num).toDouble())};
   }
 
+  // ---------- Paros ----------
+  Future<List<CausaParo>> causasParo() async =>
+      [for (final f in await _db.getAll('SELECT * FROM causas_paro WHERE visible_tablet = 1 ORDER BY nombre')) CausaParo(f)];
+
+  /// Paros de hoy registrados en esta tablet para el operario (los suyos y los de toda la célula)
+  Future<List<ParoLocal>> parosHoy(String empleadoId) async {
+    final ahora = _reloj().toUtc();
+    final filas = await _db.getAll('''
+      SELECT b.id, b.resumen, b.ocurrido_en,
+             (SELECT f.ocurrido_en FROM bandeja f WHERE f.tabla = 'paro_eventos' AND f.estado <> 'rechazado'
+               AND json_extract(f.resumen, '\$.paro_id') = b.id AND json_extract(f.resumen, '\$.tipo') = 'fin' LIMIT 1) AS fin
+      FROM bandeja b
+      WHERE b.tabla = 'paros' AND b.estado <> 'rechazado' AND b.ocurrido_en >= ?
+        AND (b.empleado_id = ? OR json_extract(b.resumen, '\$.detiene_celula') = 1)
+      ORDER BY b.ocurrido_en DESC''', [Formato.inicioDiaBogota(ahora).toIso8601String(), empleadoId]);
+    return [
+      for (final f in filas)
+        () {
+          final r = jsonDecode(f['resumen'] as String) as Map<String, dynamic>;
+          final inicio = DateTime.parse(f['ocurrido_en'] as String);
+          final min = (r['minutos_definidos'] as num?)?.toInt();
+          final fin = f['fin'] != null ? DateTime.parse(f['fin'] as String) : (min != null ? inicio.add(Duration(minutes: min)) : null);
+          return ParoLocal(id: f['id'] as String, causa: '${r['causa']}', inicio: inicio, fin: fin, detieneTrabajo: r['detiene_trabajo'] == true,
+              rolValidador: r['rol_validador'] as String?, descuenta: r['descuenta_operario'] != false);
+        }(),
+    ];
+  }
+
+  /// El paro sin terminar del operario (o de su célula), si hay
+  Future<ParoLocal?> paroActivo(String empleadoId) async {
+    final ahora = _reloj().toUtc();
+    return (await parosHoy(empleadoId)).where((p) => p.fin == null || p.fin!.isAfter(ahora)).firstOrNull;
+  }
+
+  Future<String> reportarParo(String empleadoId, CausaParo c, {String? observacion}) async => (await _bandeja.registrar(
+        tabla: 'paros',
+        datos: {'causa_id': c.id, 'empleado_id': empleadoId, 'observacion': observacion},
+        resumen: {'causa': c.nombre, 'detiene_trabajo': c.detieneTrabajo, 'detiene_celula': c.detieneCelula, 'rol_validador': c.rolValidador,
+                  'minutos_definidos': c.minutosDefinidos, 'descuenta_operario': c.descuentaOperario},
+        empleadoId: empleadoId,
+      ))
+          .id;
+
+  Future<void> terminarParo(ParoLocal p, String empleadoId, {String? validadorId}) => _bandeja.registrar(
+        tabla: 'paro_eventos',
+        datos: {'paro_id': p.id, 'tipo': 'fin', 'validador_empleado_id': validadorId},
+        resumen: {'tipo': 'fin', 'paro_id': p.id, 'causa': p.causa, 'validador': validadorId},
+        empleadoId: empleadoId,
+      );
+
   Future<List<MarcacionLocal>> _marcaciones({String? empleadoId, String? unidadId, DateTime? desde}) async {
     final filas = await _db.getAll('''
       SELECT b.id, b.resumen, b.ocurrido_en, b.estado FROM bandeja b
@@ -197,7 +270,11 @@ class RepositorioModulo {
     final ahora = _reloj().toUtc();
     final anterior = (await _marcaciones(empleadoId: empleadoId, desde: Formato.inicioDiaBogota(ahora))).firstOrNull;
     final esperados = minutosEsperados(sam: op.sam, samReproceso: op.samReproceso, repeticiones: op.repeticiones, unidades: n, reproceso: reproceso);
-    final reales = minutosReales(anterior?.hora, ahora, maxMinutos: await _maxMinutos());
+    final paros = [
+      for (final p in await parosHoy(empleadoId))
+        if (p.descuenta) (inicio: p.inicio, fin: p.fin != null && p.fin!.isBefore(ahora) ? p.fin! : ahora),
+    ];
+    final reales = minutosReales(anterior?.hora, ahora, maxMinutos: await _maxMinutos(), paros: paros);
     final r = await _bandeja.registrar(
       tabla: 'marcaciones',
       datos: {'empleado_id': empleadoId, 'unidad_id': unidad.id, 'ficha_operacion_id': op.id, 'unidades': n, 'tipo': reproceso ? 'reproceso' : 'normal'},
@@ -251,15 +328,22 @@ class RepositorioModulo {
     final s = await _db.getOptional('''
       SELECT coalesce(sum(minutos_esperados), 0) AS e, coalesce(sum(minutos_reales), 0) AS r FROM eficiencia_diaria
       WHERE empleado_id = ? AND fecha >= ? AND fecha < ?''', [empleadoId, '$mesTxt-01', hoyTxt]);
+    final q = await _db.getOptional('''
+      SELECT coalesce(sum(minutos_esperados), 0) AS e, coalesce(sum(minutos_reales), 0) AS r FROM eficiencia_diaria
+      WHERE empleado_id = ? AND fecha >= ? AND fecha < ?''', [empleadoId, '$mesTxt-${bogota.day <= 15 ? '01' : '16'}', hoyTxt]);
     var e = (s?['e'] as num?)?.toDouble() ?? 0, r = (s?['r'] as num?)?.toDouble() ?? 0;
+    var eq = (q?['e'] as num?)?.toDouble() ?? 0, rq = (q?['r'] as num?)?.toDouble() ?? 0;
     for (final m in hoy) {
       if (m.reales == null) continue;
       e += m.esperados;
       r += m.reales!;
+      eq += m.esperados;
+      rq += m.reales!;
     }
     return EficienciasOperario(
       hora: eficienciaDe(hora.map((m) => m.resumen)),
       hoy: eficienciaDe(hoy.map((m) => m.resumen)),
+      quincena: rq <= 0 ? null : (eq / rq * 1000).round() / 10,
       mes: r <= 0 ? null : (e / r * 1000).round() / 10,
       unidadesHoy: hoy.where((m) => !m.reproceso).fold(0, (a, m) => a + m.unidades),
       reprocesosHoy: hoy.where((m) => m.reproceso).fold(0, (a, m) => a + m.unidades),

@@ -121,4 +121,27 @@ void main() {
     expect(r['fo2'], (puesto: 1, fraccion: 0.4));
     expect(await repo.operacionesDelBalanceo('e1', 'op', 'otra'), isEmpty);
   });
+
+  test('un paro bloquea, se descuenta del tiempo real y termina', () async {
+    await db.execute("INSERT INTO causas_paro (id, codigo, nombre, visible_tablet, detiene_trabajo, detiene_celula, rol_validador, descuenta_operario) "
+        "VALUES ('maq', 'MAQ', 'Daño de máquina', 1, 1, 0, 'mecanico', 1)");
+    final u = (await repo.unidadPorId('j1'))!;
+    final op = (await repo.operaciones(u, 'confeccion')).first;
+    await repo.marcar(empleadoId: 'e1', unidad: u, op: op);
+    ahora = ahora.add(const Duration(minutes: 1));
+    final causa = (await repo.causasParo()).single;
+    await repo.reportarParo('e1', causa);
+    final activo = (await repo.paroActivo('e1'))!;
+    expect(activo.detieneTrabajo, isTrue);
+    expect(activo.rolValidador, 'mecanico');
+    ahora = ahora.add(const Duration(minutes: 40));
+    await repo.terminarParo(activo, 'e1', validadorId: 'e9');
+    expect(await repo.paroActivo('e1'), isNull);
+    ahora = ahora.add(const Duration(minutes: 1));
+    await repo.marcar(empleadoId: 'e1', unidad: u, op: op);
+    final ult = (await repo.ultimas('e1')).first;
+    expect(ult.reales, closeTo(2, 0.001), reason: '42 min entre marcaciones menos 40 de paro');
+    expect((await repo.eficiencias('e1')).quincena, isNotNull);
+  });
 }
+

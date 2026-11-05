@@ -67,6 +67,8 @@ Nunca desinstale la app ni borre sus datos con registros pendientes: se perderí
 4. Toque el contador cada vez que termine una prenda. Si una prenda vuelve para arreglo, pulse **Reproceso** en esa operación.
 5. Si se equivocó, en *últimas marcaciones* pulse la flecha para anular.
 6. Al terminar el juego: **Entregar** con buenas y segundas. El botón del sol cambia el fondo a claro.
+7. Si tiene que parar (máquina, falta de material, almuerzo, permiso…): **Paro** → la causa. Para seguir: **Reanudar**
+   (si fue daño de máquina, el mecánico escanea su carnet). El tiempo parado no cuenta en contra de su eficiencia.
 
 ## Satélites (jefe de producción y Costos)
 
@@ -81,3 +83,10 @@ Nunca desinstale la app ni borre sus datos con registros pendientes: se perderí
 3. Antes de prometer una fecha: **Fecha posible de entrega** (referencia y cantidad).
 4. *Balanceo*: OP y módulo → **Balancear automático** → ajuste operarios y % → **Publicar en tablets**. Imprima la hoja de balanceo para el módulo.
 
+## Jefe de producción: eficiencia, paros y TV
+
+1. *Eficiencia e incentivos*: elija fechas y vea por operario, módulo o planta; por hora, día, quincena o mes. **Excel (CSV)**.
+2. *Tiempos improductivos*: minutos por causa y el detalle de cada paro.
+3. *Causas de paro*: qué causas salen en la tablet y cómo afectan la eficiencia y la nómina.
+4. *Incentivos* (solo si la planta los paga): grupo con tramos → asígnelo al módulo → liquidación y Excel para nómina.
+5. *Tableros TV*: **Editar** las vistas y la rotación → **Abrir**. En el televisor entre con la cuenta de TV y pulse F11.

@@ -8,6 +8,7 @@ import '../../core/auth/sesion.dart';
 import '../../core/formato/formato.dart';
 import '../../core/tema/colores.dart';
 import '../../core/tema/tema.dart';
+import '../shell_web/shell_web.dart' show faseActual;
 
 final _alertasProvider = FutureProvider.autoDispose<ConCache<List<Map<String, dynamic>>>>((ref) => consultarConCache(
       ref.watch(prefsProvider),
@@ -72,8 +73,8 @@ class PantallaInicioWeb extends ConsumerWidget {
             padding: const EdgeInsets.symmetric(vertical: 5),
             child: Row(children: [
               SizedBox(width: 34, child: Text('F$n', style: estiloCodigo(12, color: Colores.textoSuave))),
-              Expanded(child: Text(nombre, style: estilo(14, color: n <= 4 ? Colores.texto : Colores.textoSuave))),
-              if (n <= 4) const Pastilla('Lista', color: Colores.verde, icono: Icons.check),
+              Expanded(child: Text(nombre, style: estilo(14, color: n <= faseActual ? Colores.texto : Colores.textoSuave))),
+              if (n <= faseActual) const Pastilla('Lista', color: Colores.verde, icono: Icons.check),
             ]),
           ),
       ]),

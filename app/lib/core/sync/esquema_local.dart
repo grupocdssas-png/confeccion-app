@@ -87,6 +87,12 @@ const esquemaLocal = Schema([
   Table('balanceo_puestos', [Column.text('balanceo_id'), Column.integer('numero'), Column.text('empleado_id')]),
   Table('balanceo_asignaciones', [Column.text('balanceo_id'), Column.text('puesto_id'), Column.text('ficha_operacion_id'), Column.real('fraccion')]),
 
+  // --- Causas de paro (Fase 8) ---
+  Table('causas_paro', [
+    Column.text('codigo'), Column.text('nombre'), Column.integer('visible_tablet'), Column.integer('detiene_trabajo'),
+    Column.integer('detiene_celula'), Column.text('rol_validador'), Column.integer('minutos_definidos'), Column.integer('descuenta_operario'),
+  ]),
+
   // --- Eventos que suben (solo se agregan) ---
   Table.insertOnly('asistencia_marcas', [
     Column.text('empleado_id'), Column.text('tipo'), Column.text('anula_id'), Column.text('motivo'), Column.text('ocurrido_en'),
@@ -112,6 +118,13 @@ const esquemaLocal = Schema([
   Table.insertOnly('eventos_unidad', [
     Column.text('unidad_id'), Column.text('tipo'), Column.integer('buenas'), Column.integer('segundas'), Column.integer('faltantes'),
     Column.text('empleado_id'), Column.text('observacion'), Column.text('ocurrido_en'),
+  ]),
+
+  Table.insertOnly('paros', [
+    Column.text('causa_id'), Column.text('empleado_id'), Column.text('maquina_id'), Column.text('observacion'), Column.text('ocurrido_en'),
+  ]),
+  Table.insertOnly('paro_eventos', [
+    Column.text('paro_id'), Column.text('tipo'), Column.text('validador_empleado_id'), Column.text('motivo'), Column.text('ocurrido_en'),
   ]),
 
   // --- Solo locales ---

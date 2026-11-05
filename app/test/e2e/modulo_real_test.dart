@@ -84,4 +84,41 @@ void main() {
       await dir.delete(recursive: true);
     }
   }, skip: activo ? false : 'Solo con E2E=1 (Supabase y PowerSync locales)', timeout: const Timeout(Duration(minutes: 3)));
+
+  test('paro sin conexión: reporta → reanuda → sube y el servidor calcula los minutos', () async {
+    final dir = await Directory.systemTemp.createTemp('e2e_paro');
+    final db = PowerSyncDatabase(schema: esquemaLocal, path: '${dir.path}/planta.db');
+    await db.initialize();
+    final admin = SupabaseClient(_url, _service);
+    final tablet = SupabaseClient(_url, _anon);
+    var reloj = DateTime.now().toUtc().subtract(const Duration(minutes: 20));
+    final repo = RepositorioModulo(db, Bandeja(db, reloj: () => reloj), reloj: () => reloj);
+    try {
+      await tablet.auth.signInWithPassword(email: 'tablet-mod1@planta.local', password: _clave);
+      await db.connect(connector: ConectorSupabase(db, cliente: tablet, endpoint: _ps));
+      await esperar(() async => (await repo.causasParo()).isNotEmpty);
+      final causa = (await repo.causasParo()).firstWhere((c) => c.rolValidador == null && c.minutosDefinidos == null && !c.detieneCelula);
+      final empleado = await admin.from('empleados').select('id').eq('codigo', 'E003').single();
+
+      await db.disconnect();
+      final paroId = await repo.reportarParo(empleado['id'], causa, observacion: 'prueba e2e');
+      expect((await repo.paroActivo(empleado['id']))?.id, paroId);
+      reloj = reloj.add(const Duration(minutes: 7));
+      await repo.terminarParo((await repo.paroActivo(empleado['id']))!, empleado['id']);
+      expect(await repo.paroActivo(empleado['id']), isNull);
+
+      await db.connect(connector: ConectorSupabase(db, cliente: tablet, endpoint: _ps));
+      await esperar(() async => (await db.get("SELECT count(*) n FROM bandeja WHERE estado = 'sincronizado' AND tabla IN ('paros','paro_eventos')"))['n'] == 2);
+      final p = await admin.from('paros_vista').select('minutos, activo, causa').eq('id', paroId).single();
+      expect(p['activo'], false);
+      expect((p['minutos'] as num).toDouble(), closeTo(7, 0.1));
+      expect(p['causa'], causa.nombre);
+    } finally {
+      await db.disconnectAndClear();
+      await db.close();
+      await tablet.dispose();
+      await admin.dispose();
+      await dir.delete(recursive: true);
+    }
+  }, skip: activo ? false : 'Solo con E2E=1 (Supabase y PowerSync locales)', timeout: const Timeout(Duration(minutes: 3)));
 }
