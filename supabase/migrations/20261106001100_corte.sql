@@ -198,7 +198,7 @@ create table public.juego_componentes (
 create view public.piezas_saldo with (security_invoker = true) as
 select p.id as paquete_id, p.codigo, p.op_id, p.corte_id, x.parte_id, p.material_id, p.color_id, p.lote_tintura, p.talla_id, p.completo,
        p.cantidad, p.cantidad - coalesce((select sum(j.cantidad) from public.juego_componentes j join public.juegos g on g.id = j.juego_id
-                                          where j.paquete_id = p.id and j.parte_id = x.parte_id and g.estado = 'armado'), 0)::int as saldo
+                                          where j.paquete_id = p.id and j.parte_id = x.parte_id and g.estado <> 'anulado'), 0)::int as saldo
 from public.paquetes p cross join lateral unnest(p.partes) x(parte_id)
 where p.estado = 'cortado';
 
@@ -742,7 +742,7 @@ begin
              left join ficha_tallas ft on ft.ficha_id = o.ficha_version_id and ft.talla_id = oc.talla_id
              where oc.op_id = p_op order by fc.orden, fc.codigo, ft.orden loop
       select coalesce(sum(j.cantidad), 0) into v_hechos from juegos j
-       where j.op_id = p_op and j.combinacion_id = c.combinacion_id and j.talla_id = c.talla_id and j.estado = 'armado';
+       where j.op_id = p_op and j.combinacion_id = c.combinacion_id and j.talla_id = c.talla_id and j.estado <> 'anulado';
       -- juegos posibles: lo mínimo entre las partes
       select min(coalesce(d.saldo, 0)) into v_pos from (
         select fp.id, (select sum(z.saldo) from _piezas z
@@ -892,7 +892,7 @@ begin
       raise exception 'Solo el jefe de corte anula un corte confirmado' using errcode = '42501';
     end if;
     if exists (select 1 from juego_componentes jc join juegos j on j.id = jc.juego_id join paquetes p on p.id = jc.paquete_id
-               where p.corte_id = p_corte and j.estado = 'armado') then
+               where p.corte_id = p_corte and j.estado <> 'anulado') then
       raise exception 'Hay juegos armados con piezas de este corte: no se puede anular';
     end if;
     if (select estado from op_procesos where op_id = v_corte.op_id and proceso = 'corte') = 'terminado' then

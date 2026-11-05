@@ -60,7 +60,7 @@ create temp table r as select ingerir_eventos(jsonb_build_object(
       'datos', jsonb_build_object('empleado_id','99999999-0000-0000-0000-000000000000','tipo','entrada','ocurrido_en', now())),
     jsonb_build_object('id','eeeeeeee-0000-0000-0000-000000000003','tabla','asistencia_marcas','op','PATCH',
       'datos', jsonb_build_object('tipo','salida')),
-    jsonb_build_object('id','eeeeeeee-0000-0000-0000-000000000004','tabla','marcaciones','op','PUT','datos','{}'::jsonb)
+    jsonb_build_object('id','eeeeeeee-0000-0000-0000-000000000004','tabla','tabla_inexistente','op','PUT','datos','{}'::jsonb)
   ))) as res;
 
 select pg_temp.ok((select res->'resultados'->0->>'estado' from r) = 'aceptado', 'Marca de entrada sin conexión (hace 3 h) aceptada');
